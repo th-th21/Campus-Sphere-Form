@@ -819,12 +819,3 @@ if st.session_state.submitted:
         "</h4>",
         unsafe_allow_html=True
     )
-
-    st.download_button(
-        label="📊 Download Response for Excel",
-        data=output.getvalue(),
-        file_name="Campus_Sphere_Response.csv",
-        mime="text/csv",
-        use_container_width=True,
-        key="download_response"
-    )
