@@ -4,62 +4,83 @@ from pathlib import Path
 from datetime import datetime
 
 # ============================================================
-# CAMPUS SPHERE - STREAMLIT VERSION
+# CAMPUS SPHERE
 # ============================================================
 
 st.set_page_config(
     page_title="Campus Sphere",
-    page_icon="🎓",
+    page_icon="💜",
     layout="wide"
 )
 
-# ------------------------------------------------------------
+# ============================================================
 # SETTINGS
-# ------------------------------------------------------------
+# ============================================================
 
 DATA_FILE = Path("Campus_Sphere_Responses.csv")
 
-# CHANGE THIS PASSWORD
+# CHANGE THIS TO YOUR OWN PRIVATE PASSWORD
 ADMIN_PASSWORD = "ChangeThisPassword123"
 
 PURPLE = "#4B248F"
+DARK_PURPLE = "#321567"
+LIGHT_PURPLE = "#F4EEFF"
+BORDER_PURPLE = "#D8C9EE"
 
-# ------------------------------------------------------------
-# CSS
-# ------------------------------------------------------------
+# ============================================================
+# CUSTOM DESIGN
+# ============================================================
 
 st.markdown(
     f"""
     <style>
+
     .main-title {{
         color: {PURPLE};
         text-align: center;
-        font-size: 42px;
+        font-size: 46px;
         font-weight: bold;
+        margin-top: 30px;
     }}
 
     .subtitle {{
+        color: #777777;
         text-align: center;
-        color: #666666;
-        font-size: 18px;
+        font-size: 19px;
+        margin-bottom: 30px;
     }}
 
     .section-title {{
         color: {PURPLE};
-        font-size: 28px;
+        font-size: 30px;
         font-weight: bold;
+        margin-bottom: 20px;
     }}
+
+    .welcome-text {{
+        color: #555555;
+        text-align: center;
+        font-size: 18px;
+        line-height: 1.7;
+    }}
+
+    div.stButton > button {{
+        border-radius: 10px;
+        font-weight: bold;
+        min-height: 45px;
+    }}
+
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# ------------------------------------------------------------
+# ============================================================
 # SESSION STATE
-# ------------------------------------------------------------
+# ============================================================
 
 if "page" not in st.session_state:
-    st.session_state.page = "home"
+    st.session_state.page = "welcome"
 
 if "admin_logged_in" not in st.session_state:
     st.session_state.admin_logged_in = False
@@ -69,31 +90,34 @@ def go_to(page):
     st.session_state.page = page
 
 
-# ------------------------------------------------------------
+# ============================================================
 # SAVE RESPONSE
-# ------------------------------------------------------------
+# ============================================================
 
 def save_response(data):
 
     new_data = pd.DataFrame([data])
 
     if DATA_FILE.exists():
+
         new_data.to_csv(
             DATA_FILE,
             mode="a",
             header=False,
             index=False
         )
+
     else:
+
         new_data.to_csv(
             DATA_FILE,
             index=False
         )
 
 
-# ------------------------------------------------------------
-# CHECKBOX HELPER
-# ------------------------------------------------------------
+# ============================================================
+# GET CHECKED OPTIONS
+# ============================================================
 
 def get_checked(prefix, options):
 
@@ -113,36 +137,85 @@ def get_checked(prefix, options):
 
 
 # ============================================================
-# HOME PAGE
+# WELCOME PAGE
 # ============================================================
 
-if st.session_state.page == "home":
+if st.session_state.page == "welcome":
 
     st.markdown(
-        '<div class="main-title">🎓 Campus Sphere</div>',
+        '<div class="main-title">💜 Campus Sphere</div>',
         unsafe_allow_html=True
     )
 
     st.markdown(
         '<div class="subtitle">'
-        'College Information & Feedback Portal'
+        'Welcome to Campus Sphere'
         '</div>',
         unsafe_allow_html=True
     )
 
     st.write("")
 
-    st.info(
-        "Welcome to Campus Sphere. "
-        "Please select your category."
+    st.markdown(
+        """
+        <div class="welcome-text">
+
+        Welcome to <b>Campus Sphere</b> — your college
+        information and feedback portal.
+
+        <br><br>
+
+        Connect, discover and share information
+        within your campus community.
+
+        </div>
+        """,
+        unsafe_allow_html=True
     )
+
+    st.write("")
+    st.write("")
+    st.write("")
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+
+        if st.button(
+            "💜 Enter the Sphere",
+            type="primary",
+            use_container_width=True
+        ):
+
+            go_to("user_type")
+            st.rerun()
+
+
+# ============================================================
+# STUDENT / STAFF SELECTION
+# ============================================================
+
+elif st.session_state.page == "user_type":
+
+    st.markdown(
+        '<div class="section-title">'
+        'Choose Your Category'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    st.write(
+        "Please select whether you are a student or staff member."
+    )
+
+    st.write("")
 
     col1, col2 = st.columns(2)
 
     with col1:
 
         if st.button(
-            "👨‍🎓 STUDENT",
+            "👨‍🎓 Student",
             use_container_width=True
         ):
 
@@ -152,18 +225,22 @@ if st.session_state.page == "home":
     with col2:
 
         if st.button(
-            "👩‍🏫 STAFF",
+            "👩‍🏫 Staff",
             use_container_width=True
         ):
 
             go_to("staff1")
             st.rerun()
 
-    st.divider()
+    st.write("")
 
-    st.caption(
-        "Students and staff cannot access submitted responses."
-    )
+    if st.button(
+        "💜 Rewind",
+        use_container_width=True
+    ):
+
+        go_to("welcome")
+        st.rerun()
 
 
 # ============================================================
@@ -224,15 +301,18 @@ elif st.session_state.page == "student1":
 
     with col1:
 
-        if st.button("⬅ Back"):
+        if st.button(
+            "💜 Rewind",
+            use_container_width=True
+        ):
 
-            go_to("home")
+            go_to("user_type")
             st.rerun()
 
     with col2:
 
         if st.button(
-            "Next ➡",
+            "💜 Discover",
             type="primary",
             use_container_width=True
         ):
@@ -247,7 +327,7 @@ elif st.session_state.page == "student1":
 
             elif year == "Select Year":
 
-                st.error("Please select your year.")
+                st.error("Please select your year of study.")
 
             else:
 
@@ -268,7 +348,7 @@ elif st.session_state.page == "student2":
         unsafe_allow_html=True
     )
 
-    # Academic Information
+    # ---------------- ACADEMIC ----------------
 
     st.subheader("Academic Information")
 
@@ -291,7 +371,7 @@ elif st.session_state.page == "student2":
                 key=f"academic_{option}"
             )
 
-    # Exam Information
+    # ---------------- EXAMS ----------------
 
     st.subheader("Exam Information")
 
@@ -314,7 +394,7 @@ elif st.session_state.page == "student2":
                 key=f"exam_{option}"
             )
 
-    # Timetable
+    # ---------------- TIMETABLE ----------------
 
     st.subheader("Timetable")
 
@@ -340,7 +420,10 @@ elif st.session_state.page == "student2":
 
     with col1:
 
-        if st.button("⬅ Back"):
+        if st.button(
+            "💜 Rewind",
+            use_container_width=True
+        ):
 
             go_to("student1")
             st.rerun()
@@ -348,7 +431,7 @@ elif st.session_state.page == "student2":
     with col2:
 
         if st.button(
-            "Next ➡",
+            "💜 Discover",
             type="primary",
             use_container_width=True
         ):
@@ -370,7 +453,7 @@ elif st.session_state.page == "student3":
         unsafe_allow_html=True
     )
 
-    # Notices
+    # ---------------- NOTICES ----------------
 
     st.subheader("Notices")
 
@@ -392,7 +475,7 @@ elif st.session_state.page == "student3":
                 key=f"notice_{option}"
             )
 
-    # Events
+    # ---------------- EVENTS ----------------
 
     st.subheader("Events")
 
@@ -414,7 +497,7 @@ elif st.session_state.page == "student3":
                 key=f"event_{option}"
             )
 
-    # Competitions
+    # ---------------- COMPETITIONS ----------------
 
     st.subheader("Competitions")
 
@@ -437,7 +520,7 @@ elif st.session_state.page == "student3":
                 key=f"competition_{option}"
             )
 
-    # Results
+    # ---------------- RESULTS ----------------
 
     st.subheader("Results & Achievements")
 
@@ -464,7 +547,10 @@ elif st.session_state.page == "student3":
 
     with col1:
 
-        if st.button("⬅ Back"):
+        if st.button(
+            "💜 Rewind",
+            use_container_width=True
+        ):
 
             go_to("student2")
             st.rerun()
@@ -472,7 +558,7 @@ elif st.session_state.page == "student3":
     with col2:
 
         if st.button(
-            "Next ➡",
+            "💜 Discover",
             type="primary",
             use_container_width=True
         ):
@@ -494,7 +580,7 @@ elif st.session_state.page == "student4":
         unsafe_allow_html=True
     )
 
-    # Learning
+    # ---------------- LEARNING ----------------
 
     st.subheader(
         "Seminars / Workshops / Learning"
@@ -519,7 +605,7 @@ elif st.session_state.page == "student4":
                 key=f"learning_{option}"
             )
 
-    # Skills
+    # ---------------- SKILLS ----------------
 
     st.subheader("Skills / Courses")
 
@@ -542,7 +628,7 @@ elif st.session_state.page == "student4":
                 key=f"skill_{option}"
             )
 
-    # Suggestions
+    # ---------------- SUGGESTIONS ----------------
 
     st.subheader("Suggestions")
 
@@ -556,7 +642,10 @@ elif st.session_state.page == "student4":
 
     with col1:
 
-        if st.button("⬅ Back"):
+        if st.button(
+            "💜 Rewind",
+            use_container_width=True
+        ):
 
             go_to("student3")
             st.rerun()
@@ -564,7 +653,7 @@ elif st.session_state.page == "student4":
     with col2:
 
         if st.button(
-            "✅ Submit Response",
+            "💜 Submit Response",
             type="primary",
             use_container_width=True
         ):
@@ -655,7 +744,7 @@ elif st.session_state.page == "student4":
             save_response(response)
 
             st.success(
-                "✅ Your response has been submitted successfully!"
+                "💜 Your response has been submitted successfully!"
             )
 
 
@@ -705,15 +794,18 @@ elif st.session_state.page == "staff1":
 
     with col1:
 
-        if st.button("⬅ Back"):
+        if st.button(
+            "💜 Rewind",
+            use_container_width=True
+        ):
 
-            go_to("home")
+            go_to("user_type")
             st.rerun()
 
     with col2:
 
         if st.button(
-            "Next ➡",
+            "💜 Discover",
             type="primary",
             use_container_width=True
         ):
@@ -753,7 +845,7 @@ elif st.session_state.page == "staff2":
         unsafe_allow_html=True
     )
 
-    # Information Managed
+    # ---------------- INFORMATION MANAGED ----------------
 
     st.subheader("Information Managed")
 
@@ -779,7 +871,7 @@ elif st.session_state.page == "staff2":
                 key=f"manage_{option}"
             )
 
-    # Regular Updates
+    # ---------------- REGULAR UPDATES ----------------
 
     st.subheader("Regular Updates")
 
@@ -805,7 +897,7 @@ elif st.session_state.page == "staff2":
                 key=f"update_{option}"
             )
 
-    # Payment Information
+    # ---------------- PAYMENT INFORMATION ----------------
 
     st.subheader("Payment Information")
 
@@ -827,7 +919,7 @@ elif st.session_state.page == "staff2":
                 key=f"payment_{option}"
             )
 
-    # Payment Details
+    # ---------------- PAYMENT DETAILS ----------------
 
     st.subheader("Payment Details")
 
@@ -851,7 +943,7 @@ elif st.session_state.page == "staff2":
                 key=f"payment_details_{option}"
             )
 
-    # Responsibility
+    # ---------------- RESPONSIBILITY ----------------
 
     st.subheader("Responsibility")
 
@@ -877,7 +969,10 @@ elif st.session_state.page == "staff2":
 
     with col1:
 
-        if st.button("⬅ Back"):
+        if st.button(
+            "💜 Rewind",
+            use_container_width=True
+        ):
 
             go_to("staff1")
             st.rerun()
@@ -885,7 +980,7 @@ elif st.session_state.page == "staff2":
     with col2:
 
         if st.button(
-            "Next ➡",
+            "💜 Discover",
             type="primary",
             use_container_width=True
         ):
@@ -947,7 +1042,10 @@ elif st.session_state.page == "staff3":
 
     with col1:
 
-        if st.button("⬅ Back"):
+        if st.button(
+            "💜 Rewind",
+            use_container_width=True
+        ):
 
             go_to("staff2")
             st.rerun()
@@ -955,7 +1053,7 @@ elif st.session_state.page == "staff3":
     with col2:
 
         if st.button(
-            "✅ Submit Response",
+            "💜 Submit Response",
             type="primary",
             use_container_width=True
         ):
@@ -1025,12 +1123,12 @@ elif st.session_state.page == "staff3":
             save_response(response)
 
             st.success(
-                "✅ Your response has been submitted successfully!"
+                "💜 Your response has been submitted successfully!"
             )
 
 
 # ============================================================
-# ADMIN / PRIVATE RESPONSE VIEWER
+# ADMIN RESPONSE VIEWER
 # ============================================================
 
 elif st.session_state.page == "admin":
@@ -1043,7 +1141,7 @@ elif st.session_state.page == "admin":
     )
 
     st.write(
-        "This section is only for the administrator."
+        "This section is restricted to the administrator."
     )
 
     if not st.session_state.admin_logged_in:
@@ -1107,17 +1205,19 @@ elif st.session_state.page == "admin":
 
 with st.sidebar:
 
-    st.markdown("## 🎓 Campus Sphere")
+    st.markdown("## 💜 Campus Sphere")
 
     st.divider()
 
     if st.button(
-        "🏠 Home",
+        "🏠 Welcome",
         use_container_width=True
     ):
 
-        go_to("home")
+        go_to("welcome")
         st.rerun()
+
+    st.divider()
 
     if st.button(
         "🔐 Admin / View Responses",
