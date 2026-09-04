@@ -1,180 +1,201 @@
 import streamlit as st
-import csv
-from io import StringIO
+import pandas as pd
+from pathlib import Path
+from datetime import datetime
 
-# ==================================================
-# CAMPUS SPHERE
-# ==================================================
+# ============================================================
+# CAMPUS SPHERE - STREAMLIT VERSION
+# ============================================================
 
 st.set_page_config(
     page_title="Campus Sphere",
     page_icon="🎓",
-    layout="centered"
+    layout="wide"
 )
 
-# ==================================================
-# STYLE
-# ==================================================
+# ------------------------------------------------------------
+# SETTINGS
+# ------------------------------------------------------------
 
-st.markdown("""
-<style>
-.stApp {
-    background-color: #FAF7FF;
-}
+DATA_FILE = Path("Campus_Sphere_Responses.csv")
 
-.main-title {
-    text-align: center;
-    color: #4B248F;
-    font-size: 32px;
-    font-weight: bold;
-}
+# CHANGE THIS PASSWORD
+ADMIN_PASSWORD = "ChangeThisPassword123"
 
-.subtitle {
-    text-align: center;
-    color: #321567;
-    font-size: 15px;
-}
+PURPLE = "#4B248F"
 
-.section-title {
-    color: #321567;
-    font-size: 21px;
-    font-weight: bold;
-}
-
-div.stButton > button {
-    background-color: #4B248F;
-    color: white;
-    border-radius: 8px;
-    border: none;
-    padding: 10px;
-    font-weight: bold;
-}
-
-div.stButton > button:hover {
-    background-color: #321567;
-    color: white;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ==================================================
-# HEADER
-# ==================================================
+# ------------------------------------------------------------
+# CSS
+# ------------------------------------------------------------
 
 st.markdown(
-    '<div class="main-title">🎓 CAMPUS SPHERE ♡</div>',
+    f"""
+    <style>
+    .main-title {{
+        color: {PURPLE};
+        text-align: center;
+        font-size: 42px;
+        font-weight: bold;
+    }}
+
+    .subtitle {{
+        text-align: center;
+        color: #666666;
+        font-size: 18px;
+    }}
+
+    .section-title {{
+        color: {PURPLE};
+        font-size: 28px;
+        font-weight: bold;
+    }}
+    </style>
+    """,
     unsafe_allow_html=True
 )
 
-st.markdown(
-    '<div class="subtitle">Student Information & Preferences Form</div>',
-    unsafe_allow_html=True
-)
-
-st.divider()
-
-# ==================================================
+# ------------------------------------------------------------
 # SESSION STATE
-# ==================================================
+# ------------------------------------------------------------
 
 if "page" not in st.session_state:
-    st.session_state.page = 0
+    st.session_state.page = "home"
 
-if "user_type" not in st.session_state:
-    st.session_state.user_type = ""
+if "admin_logged_in" not in st.session_state:
+    st.session_state.admin_logged_in = False
 
-if "submitted" not in st.session_state:
-    st.session_state.submitted = False
 
-# ==================================================
-# PAGE 0 - WELCOME
-# ==================================================
+def go_to(page):
+    st.session_state.page = page
 
-if st.session_state.page == 0:
+
+# ------------------------------------------------------------
+# SAVE RESPONSE
+# ------------------------------------------------------------
+
+def save_response(data):
+
+    new_data = pd.DataFrame([data])
+
+    if DATA_FILE.exists():
+        new_data.to_csv(
+            DATA_FILE,
+            mode="a",
+            header=False,
+            index=False
+        )
+    else:
+        new_data.to_csv(
+            DATA_FILE,
+            index=False
+        )
+
+
+# ------------------------------------------------------------
+# CHECKBOX HELPER
+# ------------------------------------------------------------
+
+def get_checked(prefix, options):
+
+    selected = []
+
+    for option in options:
+
+        key = f"{prefix}_{option}"
+
+        if st.session_state.get(key, False):
+            selected.append(option)
+
+    if selected:
+        return ", ".join(selected)
+
+    return "None"
+
+
+# ============================================================
+# HOME PAGE
+# ============================================================
+
+if st.session_state.page == "home":
 
     st.markdown(
-        "<h2 style='text-align:center;color:#4B248F;'>"
-        "Welcome to Campus Sphere"
-        "</h2>",
+        '<div class="main-title">🎓 Campus Sphere</div>',
         unsafe_allow_html=True
     )
 
     st.markdown(
-        "<p style='text-align:center;color:#777777;'>"
-        "Your campus information, all in one place."
-        "</p>",
+        '<div class="subtitle">'
+        'College Information & Feedback Portal'
+        '</div>',
         unsafe_allow_html=True
     )
 
-    if st.button(
-        "✨ Enter the Sphere",
-        use_container_width=True,
-        key="welcome_button"
-    ):
-        st.session_state.page = 1
-        st.rerun()
+    st.write("")
 
-# ==================================================
-# PAGE 1 - USER TYPE
-# ==================================================
-
-elif st.session_state.page == 1:
-
-    st.markdown(
-        '<div class="section-title">Who are you?</div>',
-        unsafe_allow_html=True
+    st.info(
+        "Welcome to Campus Sphere. "
+        "Please select your category."
     )
 
-    st.write("Select your user type to continue.")
+    col1, col2 = st.columns(2)
 
-    if st.button(
-        "🎓 Student",
-        use_container_width=True,
-        key="student_button"
-    ):
-        st.session_state.user_type = "Student"
-        st.session_state.page = 2
-        st.rerun()
+    with col1:
 
-    if st.button(
-        "👩‍🏫 Staff",
-        use_container_width=True,
-        key="staff_button"
-    ):
-        st.session_state.user_type = "Staff"
-        st.session_state.page = 6
-        st.rerun()
+        if st.button(
+            "👨‍🎓 STUDENT",
+            use_container_width=True
+        ):
 
-# ==================================================
+            go_to("student1")
+            st.rerun()
+
+    with col2:
+
+        if st.button(
+            "👩‍🏫 STAFF",
+            use_container_width=True
+        ):
+
+            go_to("staff1")
+            st.rerun()
+
+    st.divider()
+
+    st.caption(
+        "Students and staff cannot access submitted responses."
+    )
+
+
+# ============================================================
 # STUDENT PAGE 1
-# ==================================================
+# ============================================================
 
-elif st.session_state.page == 2:
+elif st.session_state.page == "student1":
 
     st.markdown(
-        '<div class="section-title">🎓 Student Details</div>',
+        '<div class="section-title">'
+        '👨‍🎓 Student Information'
+        '</div>',
         unsafe_allow_html=True
     )
-
-    st.caption("Page 1 of 4")
 
     name = st.text_input(
-        "1. Name (Required)",
-        key="student_name_input"
+        "Name *",
+        key="student_name"
     )
 
     email = st.text_input(
-        "2. Email ID (Optional)",
-        key="student_email_input"
+        "Email ID",
+        key="student_email"
     )
 
     register = st.text_input(
-        "3. Register Number (Optional)",
-        key="student_register_input"
+        "Register Number",
+        key="student_register"
     )
 
     department = st.selectbox(
-        "4. Department (Required)",
+        "Department *",
         [
             "Select Department",
             "B.Sc Data Science",
@@ -185,320 +206,489 @@ elif st.session_state.page == 2:
             "Mathematics",
             "Other"
         ],
-        key="student_department_input"
+        key="student_department"
     )
 
     year = st.selectbox(
-        "5. Year of Study (Required)",
+        "Year of Study *",
         [
             "Select Year",
             "1st Year",
             "2nd Year",
             "3rd Year"
         ],
-        key="student_year_input"
+        key="student_year"
     )
 
-    if st.button(
-        "Discover 💜 ➜",
-        use_container_width=True,
-        key="student_page1_next"
-    ):
+    col1, col2 = st.columns(2)
 
-        if name.strip() == "":
-            st.warning("Please enter your Name.")
+    with col1:
 
-        elif department == "Select Department":
-            st.warning("Please select your Department.")
+        if st.button("⬅ Back"):
 
-        elif year == "Select Year":
-            st.warning("Please select your Year of Study.")
-
-        else:
-            st.session_state.student_name = name
-            st.session_state.student_email = email
-            st.session_state.student_register = register
-            st.session_state.student_department = department
-            st.session_state.student_year = year
-
-            st.session_state.page = 3
+            go_to("home")
             st.rerun()
 
-# ==================================================
+    with col2:
+
+        if st.button(
+            "Next ➡",
+            type="primary",
+            use_container_width=True
+        ):
+
+            if not name.strip():
+
+                st.error("Please enter your name.")
+
+            elif department == "Select Department":
+
+                st.error("Please select your department.")
+
+            elif year == "Select Year":
+
+                st.error("Please select your year.")
+
+            else:
+
+                go_to("student2")
+                st.rerun()
+
+
+# ============================================================
 # STUDENT PAGE 2
-# ==================================================
+# ============================================================
 
-elif st.session_state.page == 3:
+elif st.session_state.page == "student2":
 
     st.markdown(
         '<div class="section-title">'
-        '📚 Academic, Examination, Timetables, Notices & Events'
+        '📚 Academic Information'
         '</div>',
         unsafe_allow_html=True
     )
 
-    st.caption("Page 2 of 4")
+    # Academic Information
 
-    academic = st.multiselect(
-        "6. Which academic information would you like to access through Campus Sphere?",
-        [
-            "All",
-            "Class Notes",
-            "Study Materials",
-            "Assignments",
-            "Other Academic Information"
-        ],
-        key="academic_question"
-    )
+    st.subheader("Academic Information")
 
-    exam = st.multiselect(
-        "7. Which examination-related information would you like to receive through Campus Sphere?",
-        [
-            "All",
-            "Internal Exams",
-            "Model Exams",
-            "Semester Exams",
-            "Exam Timetable"
-        ],
-        key="exam_question"
-    )
+    academic_options = [
+        "All",
+        "Class Notes",
+        "Study Materials",
+        "Assignments",
+        "Other Academic Information"
+    ]
 
-    timetable = st.multiselect(
-        "8. Which timetable and regular academic updates would you like to access?",
-        [
-            "All",
-            "Class Timetable",
-            "Exam Timetable",
-            "Academic Schedule"
-        ],
-        key="timetable_question"
-    )
+    cols = st.columns(2)
 
-    notice = st.multiselect(
-        "9. Which notices and announcements would you like to receive?",
-        [
-            "All",
-            "College Notices",
-            "Department Notices",
-            "Important Announcements"
-        ],
-        key="notice_question"
-    )
+    for i, option in enumerate(academic_options):
 
-    event = st.multiselect(
-        "10. Which events and activities would you like to know about?",
-        [
-            "All",
-            "Department Events",
-            "Other Department Events",
-            "College Events"
-        ],
-        key="event_question"
-    )
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"academic_{option}"
+            )
+
+    # Exam Information
+
+    st.subheader("Exam Information")
+
+    exam_options = [
+        "All",
+        "Internal Exams",
+        "Model Exams",
+        "Semester Exams",
+        "Exam Timetable"
+    ]
+
+    cols = st.columns(2)
+
+    for i, option in enumerate(exam_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"exam_{option}"
+            )
+
+    # Timetable
+
+    st.subheader("Timetable")
+
+    timetable_options = [
+        "All",
+        "Class Timetable",
+        "Exam Timetable",
+        "Academic Schedule"
+    ]
+
+    cols = st.columns(2)
+
+    for i, option in enumerate(timetable_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"timetable_{option}"
+            )
 
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button(
-            "⏪ Rewind",
-            use_container_width=True,
-            key="student_page2_back"
-        ):
-            st.session_state.page = 2
+
+        if st.button("⬅ Back"):
+
+            go_to("student1")
             st.rerun()
 
     with col2:
-        if st.button(
-            "Discover 💜 ➜",
-            use_container_width=True,
-            key="student_page2_next"
-        ):
-            st.session_state.academic = academic
-            st.session_state.exam = exam
-            st.session_state.timetable = timetable
-            st.session_state.notice = notice
-            st.session_state.event = event
 
-            st.session_state.page = 4
+        if st.button(
+            "Next ➡",
+            type="primary",
+            use_container_width=True
+        ):
+
+            go_to("student3")
             st.rerun()
 
-# ==================================================
+
+# ============================================================
 # STUDENT PAGE 3
-# ==================================================
+# ============================================================
 
-elif st.session_state.page == 4:
+elif st.session_state.page == "student3":
 
     st.markdown(
         '<div class="section-title">'
-        '🏆 Opportunities, Learning & Skills'
+        '📢 College Activities & Updates'
         '</div>',
         unsafe_allow_html=True
     )
 
-    st.caption("Page 3 of 4")
+    # Notices
 
-    competition = st.multiselect(
-        "11. Which competitions would you like to receive information about?",
-        [
-            "All",
-            "Department Competitions",
-            "Inter-Department Competitions",
-            "College Competitions",
-            "Technical & Cultural Competitions"
-        ],
-        key="competition_question"
-    )
+    st.subheader("Notices")
 
-    result = st.multiselect(
-        "12. What event and competition results would you like to know?",
-        [
-            "All",
-            "Prize Winners",
-            "Winning Department",
-            "Individual Achievements",
-            "Awards & Recognitions"
-        ],
-        key="result_question"
-    )
+    notice_options = [
+        "All",
+        "College Notices",
+        "Department Notices",
+        "Important Announcements"
+    ]
 
-    learning = st.multiselect(
-        "13. Which seminars, workshops and learning programs interest you?",
-        [
-            "All",
-            "Seminars",
-            "Workshops",
-            "Training Programs",
-            "Career & Skill Programs"
-        ],
-        key="learning_question"
-    )
+    cols = st.columns(2)
 
-    skill = st.multiselect(
-        "14. Which skills or courses are you interested in learning or improving?",
-        [
-            "All",
-            "Technical Skills",
-            "Communication Skills",
-            "Career Skills",
-            "Other Skills / Courses"
-        ],
-        key="skill_question"
-    )
+    for i, option in enumerate(notice_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"notice_{option}"
+            )
+
+    # Events
+
+    st.subheader("Events")
+
+    event_options = [
+        "All",
+        "Department Events",
+        "Other Department Events",
+        "College Events"
+    ]
+
+    cols = st.columns(2)
+
+    for i, option in enumerate(event_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"event_{option}"
+            )
+
+    # Competitions
+
+    st.subheader("Competitions")
+
+    competition_options = [
+        "All",
+        "Department Competitions",
+        "Inter-Department Competitions",
+        "College Competitions",
+        "Technical & Cultural Competitions"
+    ]
+
+    cols = st.columns(2)
+
+    for i, option in enumerate(competition_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"competition_{option}"
+            )
+
+    # Results
+
+    st.subheader("Results & Achievements")
+
+    result_options = [
+        "All",
+        "Prize Winners",
+        "Winning Department",
+        "Individual Achievements",
+        "Awards & Recognitions"
+    ]
+
+    cols = st.columns(2)
+
+    for i, option in enumerate(result_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"result_{option}"
+            )
 
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button(
-            "⏪ Rewind",
-            use_container_width=True,
-            key="student_page3_back"
-        ):
-            st.session_state.page = 3
+
+        if st.button("⬅ Back"):
+
+            go_to("student2")
             st.rerun()
 
     with col2:
-        if st.button(
-            "Discover 💜 ➜",
-            use_container_width=True,
-            key="student_page3_next"
-        ):
-            st.session_state.competition = competition
-            st.session_state.result = result
-            st.session_state.learning = learning
-            st.session_state.skill = skill
 
-            st.session_state.page = 5
+        if st.button(
+            "Next ➡",
+            type="primary",
+            use_container_width=True
+        ):
+
+            go_to("student4")
             st.rerun()
 
-# ==================================================
+
+# ============================================================
 # STUDENT PAGE 4
-# ==================================================
+# ============================================================
 
-elif st.session_state.page == 5:
+elif st.session_state.page == "student4":
 
     st.markdown(
-        '<div class="section-title">💌 Suggestions</div>',
+        '<div class="section-title">'
+        '🎯 Learning, Skills & Suggestions'
+        '</div>',
         unsafe_allow_html=True
     )
 
-    st.caption("Page 4 of 4")
+    # Learning
 
-    suggestion = st.text_area(
-        "15. What other information, skills, courses or campus activities would you like to see in Campus Sphere?",
-        height=150,
-        key="student_suggestion_input"
+    st.subheader(
+        "Seminars / Workshops / Learning"
+    )
+
+    learning_options = [
+        "All",
+        "Seminars",
+        "Workshops",
+        "Training Programs",
+        "Career & Skill Programs"
+    ]
+
+    cols = st.columns(2)
+
+    for i, option in enumerate(learning_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"learning_{option}"
+            )
+
+    # Skills
+
+    st.subheader("Skills / Courses")
+
+    skill_options = [
+        "All",
+        "Technical Skills",
+        "Communication Skills",
+        "Career Skills",
+        "Other Skills / Courses"
+    ]
+
+    cols = st.columns(2)
+
+    for i, option in enumerate(skill_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"skill_{option}"
+            )
+
+    # Suggestions
+
+    st.subheader("Suggestions")
+
+    suggestions = st.text_area(
+        "Your suggestions / additional feedback",
+        key="student_suggestions",
+        height=150
     )
 
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button(
-            "⏪ Rewind",
-            use_container_width=True,
-            key="student_page4_back"
-        ):
-            st.session_state.page = 4
+
+        if st.button("⬅ Back"):
+
+            go_to("student3")
             st.rerun()
 
     with col2:
+
         if st.button(
-            "✓ Submit 💜",
-            use_container_width=True,
-            key="student_submit"
+            "✅ Submit Response",
+            type="primary",
+            use_container_width=True
         ):
-            st.session_state.student_suggestion = suggestion
-            st.session_state.submitted = True
 
-    if st.session_state.submitted:
-        st.success("Your response has been recorded successfully! 💜")
+            response = {
 
-        st.markdown(
-            "<h3 style='text-align:center;color:#4B248F;'>"
-            "Thank You! ♡"
-            "</h3>",
-            unsafe_allow_html=True
-        )
+                "Submitted At":
+                    datetime.now().strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
 
-# ==================================================
+                "User Type":
+                    "Student",
+
+                "Name":
+                    st.session_state.student_name,
+
+                "Email ID":
+                    st.session_state.student_email,
+
+                "Register Number":
+                    st.session_state.student_register,
+
+                "Department":
+                    st.session_state.student_department,
+
+                "Year":
+                    st.session_state.student_year,
+
+                "Academic Information":
+                    get_checked(
+                        "academic",
+                        academic_options
+                    ),
+
+                "Exam Information":
+                    get_checked(
+                        "exam",
+                        exam_options
+                    ),
+
+                "Timetable":
+                    get_checked(
+                        "timetable",
+                        timetable_options
+                    ),
+
+                "Notices":
+                    get_checked(
+                        "notice",
+                        notice_options
+                    ),
+
+                "Events":
+                    get_checked(
+                        "event",
+                        event_options
+                    ),
+
+                "Competitions":
+                    get_checked(
+                        "competition",
+                        competition_options
+                    ),
+
+                "Results":
+                    get_checked(
+                        "result",
+                        result_options
+                    ),
+
+                "Seminars / Workshops / Learning":
+                    get_checked(
+                        "learning",
+                        learning_options
+                    ),
+
+                "Skills / Courses":
+                    get_checked(
+                        "skill",
+                        skill_options
+                    ),
+
+                "Suggestions":
+                    suggestions
+            }
+
+            save_response(response)
+
+            st.success(
+                "✅ Your response has been submitted successfully!"
+            )
+
+
+# ============================================================
 # STAFF PAGE 1
-# ==================================================
+# ============================================================
 
-elif st.session_state.page == 6:
+elif st.session_state.page == "staff1":
 
     st.markdown(
-        '<div class="section-title">👩‍🏫 Staff Details</div>',
+        '<div class="section-title">'
+        '👩‍🏫 Staff Information'
+        '</div>',
         unsafe_allow_html=True
     )
 
-    st.caption("Staff Page 1 of 3")
-
-    staff_name = st.text_input(
-        "Staff Name (Required)",
-        key="staff_name_input"
+    name = st.text_input(
+        "Staff Name *",
+        key="staff_name"
     )
 
     staff_id = st.text_input(
-        "Staff ID (Required)",
-        key="staff_id_input"
+        "Staff ID *",
+        key="staff_id"
     )
 
-    staff_department = st.selectbox(
-        "Department (Required)",
-        [
-            "Select Department",
-            "B.Sc Data Science",
-            "BCA",
-            "B.Com",
-            "B.Com CA",
-            "History",
-            "Mathematics",
-            "Other"
-        ],
-        key="staff_department_input"
+    department = st.text_input(
+        "Department *",
+        key="staff_department"
     )
 
     designation = st.selectbox(
-        "Designation (Required)",
+        "Designation *",
         [
             "Select Designation",
             "Assistant Professor",
@@ -508,314 +698,431 @@ elif st.session_state.page == 6:
             "Coordinator",
             "Other"
         ],
-        key="designation_input"
+        key="staff_designation"
     )
 
-    if st.button(
-        "Discover 💜 ➜",
-        use_container_width=True,
-        key="staff_page1_next"
-    ):
+    col1, col2 = st.columns(2)
 
-        if staff_name.strip() == "":
-            st.warning("Please enter Staff Name.")
+    with col1:
 
-        elif staff_id.strip() == "":
-            st.warning("Please enter Staff ID.")
+        if st.button("⬅ Back"):
 
-        elif staff_department == "Select Department":
-            st.warning("Please select Department.")
-
-        elif designation == "Select Designation":
-            st.warning("Please select Designation.")
-
-        else:
-            st.session_state.staff_name = staff_name
-            st.session_state.staff_id = staff_id
-            st.session_state.staff_department = staff_department
-            st.session_state.designation = designation
-
-            st.session_state.page = 7
+            go_to("home")
             st.rerun()
 
-# ==================================================
+    with col2:
+
+        if st.button(
+            "Next ➡",
+            type="primary",
+            use_container_width=True
+        ):
+
+            if not name.strip():
+
+                st.error("Please enter staff name.")
+
+            elif not staff_id.strip():
+
+                st.error("Please enter Staff ID.")
+
+            elif not department.strip():
+
+                st.error("Please enter department.")
+
+            elif designation == "Select Designation":
+
+                st.error("Please select designation.")
+
+            else:
+
+                go_to("staff2")
+                st.rerun()
+
+
+# ============================================================
 # STAFF PAGE 2
-# ==================================================
+# ============================================================
 
-elif st.session_state.page == 7:
+elif st.session_state.page == "staff2":
 
     st.markdown(
         '<div class="section-title">'
-        '📋 Campus Management & Updates'
+        '🗂️ Staff Information & Updates'
         '</div>',
         unsafe_allow_html=True
     )
 
-    st.caption("Staff Page 2 of 3")
+    # Information Managed
 
-    staff_manage = st.multiselect(
-        "1. Which campus information would you like to update or manage?",
-        [
-            "Academic Notes",
-            "Exam Timetables",
-            "Class Timetables",
-            "Notices & Announcements",
-            "Events & Activities",
-            "Seminars & Workshops",
-            "Competitions & Results",
-            "Student Achievements"
-        ],
-        key="staff_manage_question"
-    )
+    st.subheader("Information Managed")
 
-    staff_update = st.multiselect(
-        "2. Which updates should be regularly communicated to students?",
-        [
-            "Academic Updates",
-            "Exam Updates",
-            "Events",
-            "Workshops",
-            "Seminars",
-            "Competitions",
-            "Important Notices",
-            "All Updates"
-        ],
-        key="staff_update_question"
-    )
-
-    staff_payment = st.multiselect(
-        "3. Which college-related payment information should be maintained?",
-        [
-            "Department Event Fees",
-            "Cultural Event Fees",
-            "Competition Fees",
-            "Other College Fees"
-        ],
-        key="staff_payment_question"
-    )
-
-    staff_payment_details = st.multiselect(
-        "4. Which payment details should be maintained?",
-        [
-            "Student Name / Register Number",
-            "Amount Paid",
-            "Payment Type",
-            "Payment Status",
-            "Date of Payment",
-            "Person in Charge"
-        ],
-        key="staff_payment_details_question"
-    )
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        if st.button(
-            "⏪ Rewind",
-            use_container_width=True,
-            key="staff_page2_back"
-        ):
-            st.session_state.page = 6
-            st.rerun()
-
-    with col2:
-        if st.button(
-            "Discover 💜 ➜",
-            use_container_width=True,
-            key="staff_page2_next"
-        ):
-            st.session_state.staff_manage = staff_manage
-            st.session_state.staff_update = staff_update
-            st.session_state.staff_payment = staff_payment
-            st.session_state.staff_payment_details = staff_payment_details
-
-            st.session_state.page = 8
-            st.rerun()
-
-# ==================================================
-# STAFF PAGE 3
-# ==================================================
-
-elif st.session_state.page == 8:
-
-    st.markdown(
-        '<div class="section-title">'
-        '📚 Responsibilities, Updates & Suggestions'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-    st.caption("Staff Page 3 of 3")
-
-    responsibility = st.multiselect(
-        "5. Who is responsible for the payment or activity?",
-        [
-            "Staff",
-            "Student",
-            "Department Coordinator",
-            "Other"
-        ],
-        key="responsibility_question"
-    )
-
-    add_update = st.multiselect(
-        "6. What information should staff be able to add or update?",
-        [
-            "Notes / Study Materials",
-            "Timetables",
-            "Notices",
-            "Events",
-            "Workshops / Seminars",
-            "Competition Results",
-            "Student Achievements",
-            "Other Updates"
-        ],
-        key="staff_add_update_question"
-    )
-
-    staff_suggestion = st.text_area(
-        "7. What additional features or improvements would you suggest for Campus Sphere?",
-        height=150,
-        key="staff_suggestion_input"
-    )
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        if st.button(
-            "⏪ Rewind",
-            use_container_width=True,
-            key="staff_page3_back"
-        ):
-            st.session_state.page = 7
-            st.rerun()
-
-    with col2:
-        if st.button(
-            "✓ Submit 💜",
-            use_container_width=True,
-            key="staff_submit"
-        ):
-            st.session_state.staff_responsibility = responsibility
-            st.session_state.staff_add_update = add_update
-            st.session_state.staff_suggestion = staff_suggestion
-            st.session_state.submitted = True
-
-    if st.session_state.submitted:
-        st.success("Your response has been recorded successfully! 💜")
-
-        st.markdown(
-            "<h3 style='text-align:center;color:#4B248F;'>"
-            "Thank You! ♡"
-            "</h3>",
-            unsafe_allow_html=True
-        )
-
-# ==================================================
-# CSV DOWNLOAD
-# ==================================================
-
-if st.session_state.submitted:
-
-    headers = [
-        "User Type",
-        "Name",
-        "Email ID",
-        "Register Number",
-        "Department",
-        "Year of Study",
-        "Staff ID",
-        "Designation",
-        "Academic Information",
-        "Examination Information",
-        "Timetable & Academic Updates",
+    manage_options = [
+        "Academic Notes",
+        "Exam Timetables",
+        "Class Timetables",
         "Notices & Announcements",
         "Events & Activities",
-        "Competitions",
-        "Event & Competition Results",
-        "Seminars, Workshops & Learning Programs",
-        "Skills / Courses",
-        "Student Suggestions",
-        "Staff Information Managed",
-        "Staff Regular Updates",
-        "Staff Payment Information",
-        "Staff Payment Details",
-        "Staff Responsibility",
-        "Staff Information Added / Updated",
-        "Staff Suggestions"
+        "Seminars & Workshops",
+        "Competitions & Results",
+        "Student Achievements"
     ]
 
-    if st.session_state.user_type == "Student":
+    cols = st.columns(2)
 
-        data = [
-            "Student",
-            st.session_state.get("student_name", ""),
-            st.session_state.get("student_email", ""),
-            st.session_state.get("student_register", ""),
-            st.session_state.get("student_department", ""),
-            st.session_state.get("student_year", ""),
-            "",
-            "",
-            ", ".join(st.session_state.get("academic", [])),
-            ", ".join(st.session_state.get("exam", [])),
-            ", ".join(st.session_state.get("timetable", [])),
-            ", ".join(st.session_state.get("notice", [])),
-            ", ".join(st.session_state.get("event", [])),
-            ", ".join(st.session_state.get("competition", [])),
-            ", ".join(st.session_state.get("result", [])),
-            ", ".join(st.session_state.get("learning", [])),
-            ", ".join(st.session_state.get("skill", [])),
-            st.session_state.get("student_suggestion", ""),
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            ""
-        ]
+    for i, option in enumerate(manage_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"manage_{option}"
+            )
+
+    # Regular Updates
+
+    st.subheader("Regular Updates")
+
+    update_options = [
+        "Academic Updates",
+        "Exam Updates",
+        "Events",
+        "Workshops",
+        "Seminars",
+        "Competitions",
+        "Important Notices",
+        "All Updates"
+    ]
+
+    cols = st.columns(2)
+
+    for i, option in enumerate(update_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"update_{option}"
+            )
+
+    # Payment Information
+
+    st.subheader("Payment Information")
+
+    payment_options = [
+        "Department Event Fees",
+        "Cultural Event Fees",
+        "Competition Fees",
+        "Other College Fees"
+    ]
+
+    cols = st.columns(2)
+
+    for i, option in enumerate(payment_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"payment_{option}"
+            )
+
+    # Payment Details
+
+    st.subheader("Payment Details")
+
+    payment_details_options = [
+        "Student Name / Register Number",
+        "Amount Paid",
+        "Payment Type",
+        "Payment Status",
+        "Date of Payment",
+        "Person in Charge"
+    ]
+
+    cols = st.columns(2)
+
+    for i, option in enumerate(payment_details_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"payment_details_{option}"
+            )
+
+    # Responsibility
+
+    st.subheader("Responsibility")
+
+    responsibility_options = [
+        "Staff",
+        "Student",
+        "Department Coordinator",
+        "Other"
+    ]
+
+    cols = st.columns(2)
+
+    for i, option in enumerate(responsibility_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"responsibility_{option}"
+            )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        if st.button("⬅ Back"):
+
+            go_to("staff1")
+            st.rerun()
+
+    with col2:
+
+        if st.button(
+            "Next ➡",
+            type="primary",
+            use_container_width=True
+        ):
+
+            go_to("staff3")
+            st.rerun()
+
+
+# ============================================================
+# STAFF PAGE 3
+# ============================================================
+
+elif st.session_state.page == "staff3":
+
+    st.markdown(
+        '<div class="section-title">'
+        '📝 Additional Staff Information'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    st.subheader(
+        "Information Added / Updated"
+    )
+
+    add_options = [
+        "Notes / Study Materials",
+        "Timetables",
+        "Notices",
+        "Events",
+        "Workshops / Seminars",
+        "Competition Results",
+        "Student Achievements",
+        "Other Updates"
+    ]
+
+    cols = st.columns(2)
+
+    for i, option in enumerate(add_options):
+
+        with cols[i % 2]:
+
+            st.checkbox(
+                option,
+                key=f"add_{option}"
+            )
+
+    st.subheader(
+        "Additional Features / Improvements"
+    )
+
+    suggestions = st.text_area(
+        "Suggestions / additional information",
+        key="staff_suggestions",
+        height=150
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        if st.button("⬅ Back"):
+
+            go_to("staff2")
+            st.rerun()
+
+    with col2:
+
+        if st.button(
+            "✅ Submit Response",
+            type="primary",
+            use_container_width=True
+        ):
+
+            response = {
+
+                "Submitted At":
+                    datetime.now().strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
+
+                "User Type":
+                    "Staff",
+
+                "Name":
+                    st.session_state.staff_name,
+
+                "Staff ID":
+                    st.session_state.staff_id,
+
+                "Department":
+                    st.session_state.staff_department,
+
+                "Designation":
+                    st.session_state.staff_designation,
+
+                "Information Managed":
+                    get_checked(
+                        "manage",
+                        manage_options
+                    ),
+
+                "Regular Updates":
+                    get_checked(
+                        "update",
+                        update_options
+                    ),
+
+                "Payment Information":
+                    get_checked(
+                        "payment",
+                        payment_options
+                    ),
+
+                "Payment Details":
+                    get_checked(
+                        "payment_details",
+                        payment_details_options
+                    ),
+
+                "Responsibility":
+                    get_checked(
+                        "responsibility",
+                        responsibility_options
+                    ),
+
+                "Information Added / Updated":
+                    get_checked(
+                        "add",
+                        add_options
+                    ),
+
+                "Suggestions":
+                    suggestions
+            }
+
+            save_response(response)
+
+            st.success(
+                "✅ Your response has been submitted successfully!"
+            )
+
+
+# ============================================================
+# ADMIN / PRIVATE RESPONSE VIEWER
+# ============================================================
+
+elif st.session_state.page == "admin":
+
+    st.markdown(
+        '<div class="section-title">'
+        '🔐 Private Response Viewer'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    st.write(
+        "This section is only for the administrator."
+    )
+
+    if not st.session_state.admin_logged_in:
+
+        password = st.text_input(
+            "Admin Password",
+            type="password"
+        )
+
+        if st.button(
+            "🔓 Login",
+            type="primary"
+        ):
+
+            if password == ADMIN_PASSWORD:
+
+                st.session_state.admin_logged_in = True
+                st.rerun()
+
+            else:
+
+                st.error(
+                    "❌ Incorrect password."
+                )
 
     else:
 
-        data = [
-            "Staff",
-            st.session_state.get("staff_name", ""),
-            "",
-            "",
-            st.session_state.get("staff_department", ""),
-            "",
-            st.session_state.get("staff_id", ""),
-            st.session_state.get("designation", ""),
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            ", ".join(st.session_state.get("staff_manage", [])),
-            ", ".join(st.session_state.get("staff_update", [])),
-            ", ".join(st.session_state.get("staff_payment", [])),
-            ", ".join(st.session_state.get("staff_payment_details", [])),
-            ", ".join(st.session_state.get("staff_responsibility", [])),
-            ", ".join(st.session_state.get("staff_add_update", [])),
-            st.session_state.get("staff_suggestion", "")
-        ]
+        st.success(
+            "🔓 Admin access granted."
+        )
 
-    output = StringIO()
+        if DATA_FILE.exists():
 
-    writer = csv.writer(output)
-    writer.writerow(headers)
-    writer.writerow(data)
+            df = pd.read_csv(DATA_FILE)
+
+            st.write(
+                f"### Total Responses: {len(df)}"
+            )
+
+            st.dataframe(
+                df,
+                use_container_width=True,
+                height=600
+            )
+
+        else:
+
+            st.info(
+                "No responses have been submitted yet."
+            )
+
+        if st.button("🔒 Logout"):
+
+            st.session_state.admin_logged_in = False
+            st.rerun()
+
+
+# ============================================================
+# SIDEBAR
+# ============================================================
+
+with st.sidebar:
+
+    st.markdown("## 🎓 Campus Sphere")
 
     st.divider()
 
-    st.markdown(
-        "<h4 style='text-align:center;color:#4B248F;'>"
-        "📊 Your Response"
-        "</h4>",
-        unsafe_allow_html=True
-    )
+    if st.button(
+        "🏠 Home",
+        use_container_width=True
+    ):
+
+        go_to("home")
+        st.rerun()
+
+    if st.button(
+        "🔐 Admin / View Responses",
+        use_container_width=True
+    ):
+
+        go_to("admin")
+        st.rerun()
