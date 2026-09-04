@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
+from openpyxl import Workbook, load_workbook
+from io import BytesIO
+
 
 # ============================================================
 # CAMPUS SPHERE
@@ -13,16 +16,148 @@ st.set_page_config(
     layout="wide"
 )
 
+
 # ============================================================
 # SETTINGS
 # ============================================================
 
-DATA_FILE = Path("Campus_Sphere_Responses.csv")
+DATA_FILE = Path("Campus_Sphere_Responses.xlsx")
 
-# CHANGE THIS PASSWORD
-ADMIN_PASSWORD = "ChangeThisPassword123"
+# CHANGE THIS TO YOUR PRIVATE ADMIN PASSWORD
+ADMIN_PASSWORD = "MyPrivatePassword2026"
 
 PURPLE = "#4B248F"
+
+
+# ============================================================
+# OPTIONS
+# ============================================================
+
+ACADEMIC_OPTIONS = [
+    "All",
+    "Class Notes",
+    "Study Materials",
+    "Assignments",
+    "Other Academic Information"
+]
+
+EXAM_OPTIONS = [
+    "All",
+    "Internal Exams",
+    "Model Exams",
+    "Semester Exams",
+    "Exam Timetable"
+]
+
+TIMETABLE_OPTIONS = [
+    "All",
+    "Class Timetable",
+    "Exam Timetable",
+    "Academic Schedule"
+]
+
+NOTICE_OPTIONS = [
+    "All",
+    "College Notices",
+    "Department Notices",
+    "Important Announcements"
+]
+
+EVENT_OPTIONS = [
+    "All",
+    "Department Events",
+    "Other Department Events",
+    "College Events"
+]
+
+COMPETITION_OPTIONS = [
+    "All",
+    "Department Competitions",
+    "Inter-Department Competitions",
+    "College Competitions",
+    "Technical & Cultural Competitions"
+]
+
+RESULT_OPTIONS = [
+    "All",
+    "Prize Winners",
+    "Winning Department",
+    "Individual Achievements",
+    "Awards & Recognitions"
+]
+
+LEARNING_OPTIONS = [
+    "All",
+    "Seminars",
+    "Workshops",
+    "Training Programs",
+    "Career & Skill Programs"
+]
+
+SKILL_OPTIONS = [
+    "All",
+    "Technical Skills",
+    "Communication Skills",
+    "Career Skills",
+    "Other Skills / Courses"
+]
+
+MANAGE_OPTIONS = [
+    "Academic Notes",
+    "Exam Timetables",
+    "Class Timetables",
+    "Notices & Announcements",
+    "Events & Activities",
+    "Seminars & Workshops",
+    "Competitions & Results",
+    "Student Achievements"
+]
+
+UPDATE_OPTIONS = [
+    "Academic Updates",
+    "Exam Updates",
+    "Events",
+    "Workshops",
+    "Seminars",
+    "Competitions",
+    "Important Notices",
+    "All Updates"
+]
+
+PAYMENT_OPTIONS = [
+    "Department Event Fees",
+    "Cultural Event Fees",
+    "Competition Fees",
+    "Other College Fees"
+]
+
+PAYMENT_DETAILS_OPTIONS = [
+    "Student Name / Register Number",
+    "Amount Paid",
+    "Payment Type",
+    "Payment Status",
+    "Date of Payment",
+    "Person in Charge"
+]
+
+RESPONSIBILITY_OPTIONS = [
+    "Staff",
+    "Student",
+    "Department Coordinator",
+    "Other"
+]
+
+ADD_OPTIONS = [
+    "Notes / Study Materials",
+    "Timetables",
+    "Notices",
+    "Events",
+    "Workshops / Seminars",
+    "Competition Results",
+    "Student Achievements",
+    "Other Updates"
+]
+
 
 # ============================================================
 # DESIGN
@@ -72,6 +207,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+
 # ============================================================
 # SESSION STATE
 # ============================================================
@@ -82,39 +218,49 @@ if "page" not in st.session_state:
 if "admin_logged_in" not in st.session_state:
     st.session_state.admin_logged_in = False
 
+# Student details
+if "student_name" not in st.session_state:
+    st.session_state.student_name = ""
+
+if "student_email" not in st.session_state:
+    st.session_state.student_email = ""
+
+if "student_register" not in st.session_state:
+    st.session_state.student_register = ""
+
+if "student_department" not in st.session_state:
+    st.session_state.student_department = "Select Department"
+
+if "student_year" not in st.session_state:
+    st.session_state.student_year = "Select Year"
+
+if "student_suggestions" not in st.session_state:
+    st.session_state.student_suggestions = ""
+
+# Staff details
+if "staff_name" not in st.session_state:
+    st.session_state.staff_name = ""
+
+if "staff_id" not in st.session_state:
+    st.session_state.staff_id = ""
+
+if "staff_department" not in st.session_state:
+    st.session_state.staff_department = ""
+
+if "staff_designation" not in st.session_state:
+    st.session_state.staff_designation = "Select Designation"
+
+if "staff_suggestions" not in st.session_state:
+    st.session_state.staff_suggestions = ""
+
+
+# ============================================================
+# FUNCTIONS
+# ============================================================
 
 def go_to(page):
     st.session_state.page = page
 
-
-# ============================================================
-# SAVE RESPONSE
-# ============================================================
-
-def save_response(data):
-
-    new_data = pd.DataFrame([data])
-
-    if DATA_FILE.exists():
-
-        new_data.to_csv(
-            DATA_FILE,
-            mode="a",
-            header=False,
-            index=False
-        )
-
-    else:
-
-        new_data.to_csv(
-            DATA_FILE,
-            index=False
-        )
-
-
-# ============================================================
-# GET CHECKED OPTIONS
-# ============================================================
 
 def get_checked(prefix, options):
 
@@ -127,10 +273,88 @@ def get_checked(prefix, options):
         if st.session_state.get(key, False):
             selected.append(option)
 
-    if selected:
-        return ", ".join(selected)
+    if not selected:
+        return "None"
 
-    return "None"
+    return ", ".join(selected)
+
+
+# ============================================================
+# SAVE RESPONSE TO EXCEL
+# ============================================================
+
+def save_response(response):
+
+    # Create new Excel file
+    if not DATA_FILE.exists():
+
+        workbook = Workbook()
+
+        sheet = workbook.active
+        sheet.title = "Responses"
+
+        headers = list(response.keys())
+
+        # Header row
+        for column, header in enumerate(headers, start=1):
+
+            sheet.cell(
+                row=1,
+                column=column,
+                value=header
+            )
+
+        # First response
+        for column, header in enumerate(headers, start=1):
+
+            sheet.cell(
+                row=2,
+                column=column,
+                value=response.get(header, "")
+            )
+
+        workbook.save(DATA_FILE)
+
+    else:
+
+        # Open existing Excel file
+        workbook = load_workbook(DATA_FILE)
+
+        sheet = workbook["Responses"]
+
+        # Read existing headers
+        headers = []
+
+        for cell in sheet[1]:
+
+            if cell.value is not None:
+                headers.append(cell.value)
+
+        # Add new columns if required
+        for key in response.keys():
+
+            if key not in headers:
+
+                headers.append(key)
+
+                sheet.cell(
+                    row=1,
+                    column=len(headers),
+                    value=key
+                )
+
+        # Add response as new row
+        new_row = sheet.max_row + 1
+
+        for column, header in enumerate(headers, start=1):
+
+            sheet.cell(
+                row=new_row,
+                column=column,
+                value=response.get(header, "")
+            )
+
+        workbook.save(DATA_FILE)
 
 
 # ============================================================
@@ -145,11 +369,11 @@ if st.session_state.page == "welcome":
     )
 
     st.markdown(
-        '<div class="subtitle">Welcome to Campus Sphere</div>',
+        '<div class="subtitle">'
+        'Welcome to Campus Sphere'
+        '</div>',
         unsafe_allow_html=True
     )
-
-    st.write("")
 
     st.markdown(
         """
@@ -187,13 +411,15 @@ if st.session_state.page == "welcome":
 
 
 # ============================================================
-# STUDENT / STAFF SELECTION
+# STUDENT / STAFF
 # ============================================================
 
 elif st.session_state.page == "user_type":
 
     st.markdown(
-        '<div class="section-title">Choose Your Category</div>',
+        '<div class="section-title">'
+        'Choose Your Category'
+        '</div>',
         unsafe_allow_html=True
     )
 
@@ -243,7 +469,9 @@ elif st.session_state.page == "user_type":
 elif st.session_state.page == "student1":
 
     st.markdown(
-        '<div class="section-title">👨‍🎓 Student Information</div>',
+        '<div class="section-title">'
+        '👨‍🎓 Student Information'
+        '</div>',
         unsafe_allow_html=True
     )
 
@@ -288,6 +516,8 @@ elif st.session_state.page == "student1":
         key="student_year"
     )
 
+    st.write("")
+
     col1, col2 = st.columns(2)
 
     with col1:
@@ -308,15 +538,21 @@ elif st.session_state.page == "student1":
             use_container_width=True
         ):
 
-            if not st.session_state.get("student_name", "").strip():
+            if not st.session_state.student_name.strip():
 
                 st.error("Please enter your name.")
 
-            elif st.session_state.get("student_department") == "Select Department":
+            elif (
+                st.session_state.student_department
+                == "Select Department"
+            ):
 
                 st.error("Please select your department.")
 
-            elif st.session_state.get("student_year") == "Select Year":
+            elif (
+                st.session_state.student_year
+                == "Select Year"
+            ):
 
                 st.error("Please select your year of study.")
 
@@ -333,25 +569,17 @@ elif st.session_state.page == "student1":
 elif st.session_state.page == "student2":
 
     st.markdown(
-        '<div class="section-title">📚 Academic Information</div>',
+        '<div class="section-title">'
+        '📚 Academic Information'
+        '</div>',
         unsafe_allow_html=True
     )
 
-    # ---------------- ACADEMIC ----------------
-
     st.subheader("Academic Information")
-
-    academic_options = [
-        "All",
-        "Class Notes",
-        "Study Materials",
-        "Assignments",
-        "Other Academic Information"
-    ]
 
     cols = st.columns(2)
 
-    for i, option in enumerate(academic_options):
+    for i, option in enumerate(ACADEMIC_OPTIONS):
 
         with cols[i % 2]:
 
@@ -360,21 +588,11 @@ elif st.session_state.page == "student2":
                 key=f"academic_{option}"
             )
 
-    # ---------------- EXAMS ----------------
-
     st.subheader("Exam Information")
-
-    exam_options = [
-        "All",
-        "Internal Exams",
-        "Model Exams",
-        "Semester Exams",
-        "Exam Timetable"
-    ]
 
     cols = st.columns(2)
 
-    for i, option in enumerate(exam_options):
+    for i, option in enumerate(EXAM_OPTIONS):
 
         with cols[i % 2]:
 
@@ -383,20 +601,11 @@ elif st.session_state.page == "student2":
                 key=f"exam_{option}"
             )
 
-    # ---------------- TIMETABLE ----------------
-
     st.subheader("Timetable")
-
-    timetable_options = [
-        "All",
-        "Class Timetable",
-        "Exam Timetable",
-        "Academic Schedule"
-    ]
 
     cols = st.columns(2)
 
-    for i, option in enumerate(timetable_options):
+    for i, option in enumerate(TIMETABLE_OPTIONS):
 
         with cols[i % 2]:
 
@@ -404,6 +613,8 @@ elif st.session_state.page == "student2":
                 option,
                 key=f"timetable_{option}"
             )
+
+    st.write("")
 
     col1, col2 = st.columns(2)
 
@@ -436,24 +647,17 @@ elif st.session_state.page == "student2":
 elif st.session_state.page == "student3":
 
     st.markdown(
-        '<div class="section-title">📢 College Activities & Updates</div>',
+        '<div class="section-title">'
+        '📢 College Activities & Updates'
+        '</div>',
         unsafe_allow_html=True
     )
 
-    # ---------------- NOTICES ----------------
-
     st.subheader("Notices")
-
-    notice_options = [
-        "All",
-        "College Notices",
-        "Department Notices",
-        "Important Announcements"
-    ]
 
     cols = st.columns(2)
 
-    for i, option in enumerate(notice_options):
+    for i, option in enumerate(NOTICE_OPTIONS):
 
         with cols[i % 2]:
 
@@ -462,20 +666,11 @@ elif st.session_state.page == "student3":
                 key=f"notice_{option}"
             )
 
-    # ---------------- EVENTS ----------------
-
     st.subheader("Events")
-
-    event_options = [
-        "All",
-        "Department Events",
-        "Other Department Events",
-        "College Events"
-    ]
 
     cols = st.columns(2)
 
-    for i, option in enumerate(event_options):
+    for i, option in enumerate(EVENT_OPTIONS):
 
         with cols[i % 2]:
 
@@ -484,21 +679,11 @@ elif st.session_state.page == "student3":
                 key=f"event_{option}"
             )
 
-    # ---------------- COMPETITIONS ----------------
-
     st.subheader("Competitions")
-
-    competition_options = [
-        "All",
-        "Department Competitions",
-        "Inter-Department Competitions",
-        "College Competitions",
-        "Technical & Cultural Competitions"
-    ]
 
     cols = st.columns(2)
 
-    for i, option in enumerate(competition_options):
+    for i, option in enumerate(COMPETITION_OPTIONS):
 
         with cols[i % 2]:
 
@@ -507,21 +692,11 @@ elif st.session_state.page == "student3":
                 key=f"competition_{option}"
             )
 
-    # ---------------- RESULTS ----------------
-
     st.subheader("Results & Achievements")
-
-    result_options = [
-        "All",
-        "Prize Winners",
-        "Winning Department",
-        "Individual Achievements",
-        "Awards & Recognitions"
-    ]
 
     cols = st.columns(2)
 
-    for i, option in enumerate(result_options):
+    for i, option in enumerate(RESULT_OPTIONS):
 
         with cols[i % 2]:
 
@@ -529,6 +704,8 @@ elif st.session_state.page == "student3":
                 option,
                 key=f"result_{option}"
             )
+
+    st.write("")
 
     col1, col2 = st.columns(2)
 
@@ -561,25 +738,19 @@ elif st.session_state.page == "student3":
 elif st.session_state.page == "student4":
 
     st.markdown(
-        '<div class="section-title">🎯 Learning, Skills & Suggestions</div>',
+        '<div class="section-title">'
+        '🎯 Learning, Skills & Suggestions'
+        '</div>',
         unsafe_allow_html=True
     )
 
-    # ---------------- LEARNING ----------------
-
-    st.subheader("Seminars / Workshops / Learning")
-
-    learning_options = [
-        "All",
-        "Seminars",
-        "Workshops",
-        "Training Programs",
-        "Career & Skill Programs"
-    ]
+    st.subheader(
+        "Seminars / Workshops / Learning"
+    )
 
     cols = st.columns(2)
 
-    for i, option in enumerate(learning_options):
+    for i, option in enumerate(LEARNING_OPTIONS):
 
         with cols[i % 2]:
 
@@ -588,21 +759,11 @@ elif st.session_state.page == "student4":
                 key=f"learning_{option}"
             )
 
-    # ---------------- SKILLS ----------------
-
     st.subheader("Skills / Courses")
-
-    skill_options = [
-        "All",
-        "Technical Skills",
-        "Communication Skills",
-        "Career Skills",
-        "Other Skills / Courses"
-    ]
 
     cols = st.columns(2)
 
-    for i, option in enumerate(skill_options):
+    for i, option in enumerate(SKILL_OPTIONS):
 
         with cols[i % 2]:
 
@@ -611,8 +772,6 @@ elif st.session_state.page == "student4":
                 key=f"skill_{option}"
             )
 
-    # ---------------- SUGGESTIONS ----------------
-
     st.subheader("Suggestions")
 
     st.text_area(
@@ -620,6 +779,8 @@ elif st.session_state.page == "student4":
         key="student_suggestions",
         height=150
     )
+
+    st.write("")
 
     col1, col2 = st.columns(2)
 
@@ -651,7 +812,6 @@ elif st.session_state.page == "student4":
                 "User Type":
                     "Student",
 
-                # SAFE SESSION STATE
                 "Name":
                     st.session_state.get(
                         "student_name",
@@ -685,55 +845,55 @@ elif st.session_state.page == "student4":
                 "Academic Information":
                     get_checked(
                         "academic",
-                        academic_options
+                        ACADEMIC_OPTIONS
                     ),
 
                 "Exam Information":
                     get_checked(
                         "exam",
-                        exam_options
+                        EXAM_OPTIONS
                     ),
 
                 "Timetable":
                     get_checked(
                         "timetable",
-                        timetable_options
+                        TIMETABLE_OPTIONS
                     ),
 
                 "Notices":
                     get_checked(
                         "notice",
-                        notice_options
+                        NOTICE_OPTIONS
                     ),
 
                 "Events":
                     get_checked(
                         "event",
-                        event_options
+                        EVENT_OPTIONS
                     ),
 
                 "Competitions":
                     get_checked(
                         "competition",
-                        competition_options
+                        COMPETITION_OPTIONS
                     ),
 
                 "Results":
                     get_checked(
                         "result",
-                        result_options
+                        RESULT_OPTIONS
                     ),
 
                 "Seminars / Workshops / Learning":
                     get_checked(
                         "learning",
-                        learning_options
+                        LEARNING_OPTIONS
                     ),
 
                 "Skills / Courses":
                     get_checked(
                         "skill",
-                        skill_options
+                        SKILL_OPTIONS
                     ),
 
                 "Suggestions":
@@ -757,7 +917,9 @@ elif st.session_state.page == "student4":
 elif st.session_state.page == "staff1":
 
     st.markdown(
-        '<div class="section-title">👩‍🏫 Staff Information</div>',
+        '<div class="section-title">'
+        '👩‍🏫 Staff Information'
+        '</div>',
         unsafe_allow_html=True
     )
 
@@ -790,6 +952,8 @@ elif st.session_state.page == "staff1":
         key="staff_designation"
     )
 
+    st.write("")
+
     col1, col2 = st.columns(2)
 
     with col1:
@@ -810,19 +974,22 @@ elif st.session_state.page == "staff1":
             use_container_width=True
         ):
 
-            if not st.session_state.get("staff_name", "").strip():
+            if not st.session_state.staff_name.strip():
 
                 st.error("Please enter staff name.")
 
-            elif not st.session_state.get("staff_id", "").strip():
+            elif not st.session_state.staff_id.strip():
 
                 st.error("Please enter Staff ID.")
 
-            elif not st.session_state.get("staff_department", "").strip():
+            elif not st.session_state.staff_department.strip():
 
                 st.error("Please enter department.")
 
-            elif st.session_state.get("staff_designation") == "Select Designation":
+            elif (
+                st.session_state.staff_designation
+                == "Select Designation"
+            ):
 
                 st.error("Please select designation.")
 
@@ -839,28 +1006,17 @@ elif st.session_state.page == "staff1":
 elif st.session_state.page == "staff2":
 
     st.markdown(
-        '<div class="section-title">🗂️ Staff Information & Updates</div>',
+        '<div class="section-title">'
+        '🗂️ Staff Information & Updates'
+        '</div>',
         unsafe_allow_html=True
     )
 
-    # ---------------- INFORMATION MANAGED ----------------
-
     st.subheader("Information Managed")
-
-    manage_options = [
-        "Academic Notes",
-        "Exam Timetables",
-        "Class Timetables",
-        "Notices & Announcements",
-        "Events & Activities",
-        "Seminars & Workshops",
-        "Competitions & Results",
-        "Student Achievements"
-    ]
 
     cols = st.columns(2)
 
-    for i, option in enumerate(manage_options):
+    for i, option in enumerate(MANAGE_OPTIONS):
 
         with cols[i % 2]:
 
@@ -869,24 +1025,11 @@ elif st.session_state.page == "staff2":
                 key=f"manage_{option}"
             )
 
-    # ---------------- REGULAR UPDATES ----------------
-
     st.subheader("Regular Updates")
-
-    update_options = [
-        "Academic Updates",
-        "Exam Updates",
-        "Events",
-        "Workshops",
-        "Seminars",
-        "Competitions",
-        "Important Notices",
-        "All Updates"
-    ]
 
     cols = st.columns(2)
 
-    for i, option in enumerate(update_options):
+    for i, option in enumerate(UPDATE_OPTIONS):
 
         with cols[i % 2]:
 
@@ -895,20 +1038,11 @@ elif st.session_state.page == "staff2":
                 key=f"update_{option}"
             )
 
-    # ---------------- PAYMENT INFORMATION ----------------
-
     st.subheader("Payment Information")
-
-    payment_options = [
-        "Department Event Fees",
-        "Cultural Event Fees",
-        "Competition Fees",
-        "Other College Fees"
-    ]
 
     cols = st.columns(2)
 
-    for i, option in enumerate(payment_options):
+    for i, option in enumerate(PAYMENT_OPTIONS):
 
         with cols[i % 2]:
 
@@ -917,22 +1051,11 @@ elif st.session_state.page == "staff2":
                 key=f"payment_{option}"
             )
 
-    # ---------------- PAYMENT DETAILS ----------------
-
     st.subheader("Payment Details")
-
-    payment_details_options = [
-        "Student Name / Register Number",
-        "Amount Paid",
-        "Payment Type",
-        "Payment Status",
-        "Date of Payment",
-        "Person in Charge"
-    ]
 
     cols = st.columns(2)
 
-    for i, option in enumerate(payment_details_options):
+    for i, option in enumerate(PAYMENT_DETAILS_OPTIONS):
 
         with cols[i % 2]:
 
@@ -941,20 +1064,11 @@ elif st.session_state.page == "staff2":
                 key=f"payment_details_{option}"
             )
 
-    # ---------------- RESPONSIBILITY ----------------
-
     st.subheader("Responsibility")
-
-    responsibility_options = [
-        "Staff",
-        "Student",
-        "Department Coordinator",
-        "Other"
-    ]
 
     cols = st.columns(2)
 
-    for i, option in enumerate(responsibility_options):
+    for i, option in enumerate(RESPONSIBILITY_OPTIONS):
 
         with cols[i % 2]:
 
@@ -962,6 +1076,8 @@ elif st.session_state.page == "staff2":
                 option,
                 key=f"responsibility_{option}"
             )
+
+    st.write("")
 
     col1, col2 = st.columns(2)
 
@@ -994,26 +1110,19 @@ elif st.session_state.page == "staff2":
 elif st.session_state.page == "staff3":
 
     st.markdown(
-        '<div class="section-title">📝 Additional Staff Information</div>',
+        '<div class="section-title">'
+        '📝 Additional Staff Information'
+        '</div>',
         unsafe_allow_html=True
     )
 
-    st.subheader("Information Added / Updated")
-
-    add_options = [
-        "Notes / Study Materials",
-        "Timetables",
-        "Notices",
-        "Events",
-        "Workshops / Seminars",
-        "Competition Results",
-        "Student Achievements",
-        "Other Updates"
-    ]
+    st.subheader(
+        "Information Added / Updated"
+    )
 
     cols = st.columns(2)
 
-    for i, option in enumerate(add_options):
+    for i, option in enumerate(ADD_OPTIONS):
 
         with cols[i % 2]:
 
@@ -1022,13 +1131,17 @@ elif st.session_state.page == "staff3":
                 key=f"add_{option}"
             )
 
-    st.subheader("Additional Features / Improvements")
+    st.subheader(
+        "Additional Features / Improvements"
+    )
 
     st.text_area(
         "Suggestions / additional information",
         key="staff_suggestions",
         height=150
     )
+
+    st.write("")
 
     col1, col2 = st.columns(2)
 
@@ -1060,7 +1173,6 @@ elif st.session_state.page == "staff3":
                 "User Type":
                     "Staff",
 
-                # SAFE SESSION STATE
                 "Name":
                     st.session_state.get(
                         "staff_name",
@@ -1088,37 +1200,37 @@ elif st.session_state.page == "staff3":
                 "Information Managed":
                     get_checked(
                         "manage",
-                        manage_options
+                        MANAGE_OPTIONS
                     ),
 
                 "Regular Updates":
                     get_checked(
                         "update",
-                        update_options
+                        UPDATE_OPTIONS
                     ),
 
                 "Payment Information":
                     get_checked(
                         "payment",
-                        payment_options
+                        PAYMENT_OPTIONS
                     ),
 
                 "Payment Details":
                     get_checked(
                         "payment_details",
-                        payment_details_options
+                        PAYMENT_DETAILS_OPTIONS
                     ),
 
                 "Responsibility":
                     get_checked(
                         "responsibility",
-                        responsibility_options
+                        RESPONSIBILITY_OPTIONS
                     ),
 
                 "Information Added / Updated":
                     get_checked(
                         "add",
-                        add_options
+                        ADD_OPTIONS
                     ),
 
                 "Suggestions":
@@ -1136,19 +1248,25 @@ elif st.session_state.page == "staff3":
 
 
 # ============================================================
-# PRIVATE ADMIN RESPONSE VIEWER
+# ADMIN PAGE
 # ============================================================
 
 elif st.session_state.page == "admin":
 
     st.markdown(
-        '<div class="section-title">🔐 Private Response Viewer</div>',
+        '<div class="section-title">'
+        '🔐 Private Response Viewer'
+        '</div>',
         unsafe_allow_html=True
     )
 
     st.write(
-        "This section is restricted to the administrator."
+        "Only the administrator can view submitted responses."
     )
+
+    # --------------------------------------------------------
+    # PASSWORD
+    # --------------------------------------------------------
 
     if not st.session_state.admin_logged_in:
 
@@ -1173,6 +1291,10 @@ elif st.session_state.page == "admin":
                     "❌ Incorrect password."
                 )
 
+    # --------------------------------------------------------
+    # ADMIN LOGGED IN
+    # --------------------------------------------------------
+
     else:
 
         st.success(
@@ -1181,23 +1303,65 @@ elif st.session_state.page == "admin":
 
         if DATA_FILE.exists():
 
-            df = pd.read_csv(DATA_FILE)
+            try:
 
-            st.write(
-                f"### Total Responses: {len(df)}"
-            )
+                df = pd.read_excel(
+                    DATA_FILE,
+                    engine="openpyxl"
+                )
 
-            st.dataframe(
-                df,
-                use_container_width=True,
-                height=600
-            )
+                st.write(
+                    f"### Total Responses: {len(df)}"
+                )
+
+                st.dataframe(
+                    df,
+                    use_container_width=True,
+                    height=600
+                )
+
+                # --------------------------------------------
+                # ADMIN ONLY EXCEL DOWNLOAD
+                # --------------------------------------------
+
+                excel_buffer = BytesIO()
+
+                with pd.ExcelWriter(
+                    excel_buffer,
+                    engine="openpyxl"
+                ) as writer:
+
+                    df.to_excel(
+                        writer,
+                        index=False,
+                        sheet_name="Responses"
+                    )
+
+                excel_buffer.seek(0)
+
+                st.download_button(
+                    "📥 Download Excel Responses",
+                    data=excel_buffer.getvalue(),
+                    file_name="Campus_Sphere_Responses.xlsx",
+                    mime=(
+                        "application/vnd.openxmlformats-officedocument."
+                        "spreadsheetml.sheet"
+                    )
+                )
+
+            except Exception:
+
+                st.error(
+                    "Unable to read the Excel response file."
+                )
 
         else:
 
             st.info(
                 "No responses have been submitted yet."
             )
+
+        st.write("")
 
         if st.button("🔒 Logout"):
 
@@ -1211,7 +1375,9 @@ elif st.session_state.page == "admin":
 
 with st.sidebar:
 
-    st.markdown("## 💜 Campus Sphere")
+    st.markdown(
+        "## 💜 Campus Sphere"
+    )
 
     st.divider()
 
