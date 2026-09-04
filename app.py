@@ -24,10 +24,9 @@ st.set_page_config(
 DATA_FILE = Path("Campus_Sphere_Responses.xlsx")
 
 # CHANGE THIS TO YOUR PRIVATE ADMIN PASSWORD
-ADMIN_PASSWORD = "MyPrivatePassword2026"
+ADMIN_PASSWORD = "campus sphere0123"
 
 PURPLE = "#4B248F"
-
 
 # ============================================================
 # OPTIONS
