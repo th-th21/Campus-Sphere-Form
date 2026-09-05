@@ -1244,10 +1244,9 @@ elif st.session_state.page == "staff3":
             }
 
            success, message = send_to_google_sheet(response)
+        if success:
 
-if success:
-
-    st.success(
+        st.success(
         "💜 Your response has been submitted successfully!"
     )
 
