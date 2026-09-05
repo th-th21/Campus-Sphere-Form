@@ -1,11 +1,8 @@
 import streamlit as st
-import pandas as pd
-from pathlib import Path
-from datetime import datetime
-from openpyxl import Workbook, load_workbook
-from io import BytesIO
 import json
 import urllib.request
+from datetime import datetime
+
 
 # ============================================================
 # CAMPUS SPHERE
@@ -19,16 +16,22 @@ st.set_page_config(
 
 
 # ============================================================
+# GOOGLE APPS SCRIPT WEB APP URL
+# ============================================================
+
+GOOGLE_SCRIPT_URL = (
+    "https://script.google.com/macros/s/"
+    "AKfycbyVCqbH-YzW7OE03d-s0RnVnAzf3ZwVxRrBqwjmNZRC8tK0xxpSL7fMYrbe-PJKPee9/"
+    "exec"
+)
+
+
+# ============================================================
 # SETTINGS
 # ============================================================
 
-DATA_FILE = Path("Campus_Sphere_Responses.xlsx")
-GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyVCqbH-YzW7OE03d-s0RnVnAzf3ZwVxRrBqwjmNZRC8tK0xxpSL7fMYrbe-PJKPee9/exec"
-
-# CHANGE THIS TO YOUR PRIVATE ADMIN PASSWORD
-ADMIN_PASSWORD = "campus sphere0123"
-
 PURPLE = "#4B248F"
+
 
 # ============================================================
 # OPTIONS
@@ -216,10 +219,6 @@ st.markdown(
 if "page" not in st.session_state:
     st.session_state.page = "welcome"
 
-if "admin_logged_in" not in st.session_state:
-    st.session_state.admin_logged_in = False
-
-# Student details
 if "student_name" not in st.session_state:
     st.session_state.student_name = ""
 
@@ -238,7 +237,6 @@ if "student_year" not in st.session_state:
 if "student_suggestions" not in st.session_state:
     st.session_state.student_suggestions = ""
 
-# Staff details
 if "staff_name" not in st.session_state:
     st.session_state.staff_name = ""
 
@@ -256,12 +254,16 @@ if "staff_suggestions" not in st.session_state:
 
 
 # ============================================================
-# FUNCTIONS
+# NAVIGATION
 # ============================================================
 
 def go_to(page):
     st.session_state.page = page
 
+
+# ============================================================
+# CHECKBOX FUNCTION
+# ============================================================
 
 def get_checked(prefix, options):
 
@@ -281,81 +283,36 @@ def get_checked(prefix, options):
 
 
 # ============================================================
-# SAVE RESPONSE TO EXCEL
+# SEND RESPONSE TO GOOGLE SHEETS
 # ============================================================
 
-def save_response(response):
+def send_to_google_sheet(response):
 
-    # Create new Excel file
-    if not DATA_FILE.exists():
+    try:
 
-        workbook = Workbook()
+        data = json.dumps(response).encode("utf-8")
 
-        sheet = workbook.active
-        sheet.title = "Responses"
+        request = urllib.request.Request(
+            GOOGLE_SCRIPT_URL,
+            data=data,
+            headers={
+                "Content-Type": "application/json"
+            },
+            method="POST"
+        )
 
-        headers = list(response.keys())
+        with urllib.request.urlopen(
+            request,
+            timeout=30
+        ) as result:
 
-        # Header row
-        for column, header in enumerate(headers, start=1):
+            response_text = result.read().decode("utf-8")
 
-            sheet.cell(
-                row=1,
-                column=column,
-                value=header
-            )
+        return True, response_text
 
-        # First response
-        for column, header in enumerate(headers, start=1):
+    except Exception as error:
 
-            sheet.cell(
-                row=2,
-                column=column,
-                value=response.get(header, "")
-            )
-
-        workbook.save(DATA_FILE)
-
-    else:
-
-        # Open existing Excel file
-        workbook = load_workbook(DATA_FILE)
-
-        sheet = workbook["Responses"]
-
-        # Read existing headers
-        headers = []
-
-        for cell in sheet[1]:
-
-            if cell.value is not None:
-                headers.append(cell.value)
-
-        # Add new columns if required
-        for key in response.keys():
-
-            if key not in headers:
-
-                headers.append(key)
-
-                sheet.cell(
-                    row=1,
-                    column=len(headers),
-                    value=key
-                )
-
-        # Add response as new row
-        new_row = sheet.max_row + 1
-
-        for column, header in enumerate(headers, start=1):
-
-            sheet.cell(
-                row=new_row,
-                column=column,
-                value=response.get(header, "")
-            )
-
-        workbook.save(DATA_FILE)
+        return False, str(error)
 
 
 # ============================================================
@@ -412,7 +369,7 @@ if st.session_state.page == "welcome":
 
 
 # ============================================================
-# STUDENT / STAFF
+# USER TYPE
 # ============================================================
 
 elif st.session_state.page == "user_type":
@@ -543,17 +500,11 @@ elif st.session_state.page == "student1":
 
                 st.error("Please enter your name.")
 
-            elif (
-                st.session_state.student_department
-                == "Select Department"
-            ):
+            elif st.session_state.student_department == "Select Department":
 
                 st.error("Please select your department.")
 
-            elif (
-                st.session_state.student_year
-                == "Select Year"
-            ):
+            elif st.session_state.student_year == "Select Year":
 
                 st.error("Please select your year of study.")
 
@@ -814,34 +765,19 @@ elif st.session_state.page == "student4":
                     "Student",
 
                 "Name":
-                    st.session_state.get(
-                        "student_name",
-                        ""
-                    ),
+                    st.session_state.student_name,
 
                 "Email ID":
-                    st.session_state.get(
-                        "student_email",
-                        ""
-                    ),
+                    st.session_state.student_email,
 
                 "Register Number":
-                    st.session_state.get(
-                        "student_register",
-                        ""
-                    ),
+                    st.session_state.student_register,
 
                 "Department":
-                    st.session_state.get(
-                        "student_department",
-                        ""
-                    ),
+                    st.session_state.student_department,
 
                 "Year":
-                    st.session_state.get(
-                        "student_year",
-                        ""
-                    ),
+                    st.session_state.student_year,
 
                 "Academic Information":
                     get_checked(
@@ -898,19 +834,24 @@ elif st.session_state.page == "student4":
                     ),
 
                 "Suggestions":
-                    st.session_state.get(
-                        "student_suggestions",
-                        ""
-                    )
+                    st.session_state.student_suggestions
             }
 
+            success, message = send_to_google_sheet(response)
+
             if success:
-                st.success("💜 Your response has been submitted successfully!")
+
+                st.success(
+                    "💜 Your response has been submitted successfully!"
+                )
 
             else:
+
                 st.error(
-        f"❌ Unable to save response: {message}"
-    )
+                    "❌ Unable to submit the response."
+                )
+
+                st.code(message)
 
 
 # ============================================================
@@ -989,10 +930,7 @@ elif st.session_state.page == "staff1":
 
                 st.error("Please enter department.")
 
-            elif (
-                st.session_state.staff_designation
-                == "Select Designation"
-            ):
+            elif st.session_state.staff_designation == "Select Designation":
 
                 st.error("Please select designation.")
 
@@ -1177,28 +1115,16 @@ elif st.session_state.page == "staff3":
                     "Staff",
 
                 "Name":
-                    st.session_state.get(
-                        "staff_name",
-                        ""
-                    ),
+                    st.session_state.staff_name,
 
                 "Staff ID":
-                    st.session_state.get(
-                        "staff_id",
-                        ""
-                    ),
+                    st.session_state.staff_id,
 
                 "Department":
-                    st.session_state.get(
-                        "staff_department",
-                        ""
-                    ),
+                    st.session_state.staff_department,
 
                 "Designation":
-                    st.session_state.get(
-                        "staff_designation",
-                        ""
-                    ),
+                    st.session_state.staff_designation,
 
                 "Information Managed":
                     get_checked(
@@ -1237,146 +1163,24 @@ elif st.session_state.page == "staff3":
                     ),
 
                 "Suggestions":
-                    st.session_state.get(
-                        "staff_suggestions",
-                        ""
-                    )
+                    st.session_state.staff_suggestions
             }
 
-           success, message = send_to_google_sheet(response)
-        if success:
+            success, message = send_to_google_sheet(response)
 
-        st.success(
-        "💜 Your response has been submitted successfully!"
-    )
+            if success:
 
-else:
-
-    st.error(
-        f"❌ Unable to save response: {message}"
-    )
-
-
-# ============================================================
-# ADMIN PAGE
-# ============================================================
-
-elif st.session_state.page == "admin":
-
-    st.markdown(
-        '<div class="section-title">'
-        '🔐 Private Response Viewer'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-    st.write(
-        "Only the administrator can view submitted responses."
-    )
-
-    # --------------------------------------------------------
-    # PASSWORD
-    # --------------------------------------------------------
-
-    if not st.session_state.admin_logged_in:
-
-        password = st.text_input(
-            "Admin Password",
-            type="password"
-        )
-
-        if st.button(
-            "🔓 Login",
-            type="primary"
-        ):
-
-            if password == ADMIN_PASSWORD:
-
-                st.session_state.admin_logged_in = True
-                st.rerun()
+                st.success(
+                    "💜 Your response has been submitted successfully!"
+                )
 
             else:
 
                 st.error(
-                    "❌ Incorrect password."
+                    "❌ Unable to submit the response."
                 )
 
-    # --------------------------------------------------------
-    # ADMIN LOGGED IN
-    # --------------------------------------------------------
-
-    else:
-
-        st.success(
-            "🔓 Admin access granted."
-        )
-
-        if DATA_FILE.exists():
-
-            try:
-
-                df = pd.read_excel(
-                    DATA_FILE,
-                    engine="openpyxl"
-                )
-
-                st.write(
-                    f"### Total Responses: {len(df)}"
-                )
-
-                st.dataframe(
-                    df,
-                    use_container_width=True,
-                    height=600
-                )
-
-                # --------------------------------------------
-                # ADMIN ONLY EXCEL DOWNLOAD
-                # --------------------------------------------
-
-                excel_buffer = BytesIO()
-
-                with pd.ExcelWriter(
-                    excel_buffer,
-                    engine="openpyxl"
-                ) as writer:
-
-                    df.to_excel(
-                        writer,
-                        index=False,
-                        sheet_name="Responses"
-                    )
-
-                excel_buffer.seek(0)
-
-                st.download_button(
-                    "📥 Download Excel Responses",
-                    data=excel_buffer.getvalue(),
-                    file_name="Campus_Sphere_Responses.xlsx",
-                    mime=(
-                        "application/vnd.openxmlformats-officedocument."
-                        "spreadsheetml.sheet"
-                    )
-                )
-
-            except Exception:
-
-                st.error(
-                    "Unable to read the Excel response file."
-                )
-
-        else:
-
-            st.info(
-                "No responses have been submitted yet."
-            )
-
-        st.write("")
-
-        if st.button("🔒 Logout"):
-
-            st.session_state.admin_logged_in = False
-            st.rerun()
+                st.code(message)
 
 
 # ============================================================
@@ -1401,10 +1205,6 @@ with st.sidebar:
 
     st.divider()
 
-    if st.button(
-        "🔐 Admin / View Responses",
-        use_container_width=True
-    ):
-
-        go_to("admin")
-        st.rerun()
+    st.caption(
+        "Responses are securely submitted to the connected Google Sheet."
+    )
