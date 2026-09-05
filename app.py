@@ -1,10 +1,13 @@
-import streamlit as st
+
++import streamlit as st
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
-from openpyxl import Workbook, load_workbook
+from openpyxl import Workbook,
+load_workbook
 from io import BytesIO
-
+import json
+import urllib.request
 
 # ============================================================
 # CAMPUS SPHERE
@@ -22,6 +25,7 @@ st.set_page_config(
 # ============================================================
 
 DATA_FILE = Path("Campus_Sphere_Responses.xlsx")
+GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyVCqbH-YzW7OE03d-s0RnVnAzf3ZwVxRrBqwjmNZRC8tK0xxpSL7fMYrbe-PJKPee9/exec"
 
 # CHANGE THIS TO YOUR PRIVATE ADMIN PASSWORD
 ADMIN_PASSWORD = "campus sphere0123"
@@ -902,11 +906,13 @@ elif st.session_state.page == "student4":
                     )
             }
 
-            save_response(response)
+            if success:
+                st.success("💜 Your response has been submitted successfully!")
 
-            st.success(
-                "💜 Your response has been submitted successfully!"
-            )
+            else:
+                st.error(
+        f"❌ Unable to save response: {message}"
+    )
 
 
 # ============================================================
@@ -1239,11 +1245,19 @@ elif st.session_state.page == "staff3":
                     )
             }
 
-            save_response(response)
+           success, message = send_to_google_sheet(response)
 
-            st.success(
-                "💜 Your response has been submitted successfully!"
-            )
+if success:
+
+    st.success(
+        "💜 Your response has been submitted successfully!"
+    )
+
+else:
+
+    st.error(
+        f"❌ Unable to save response: {message}"
+    )
 
 
 # ============================================================
