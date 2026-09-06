@@ -1011,38 +1011,3 @@ elif st.session_state.page == "staff_responsibilities":
                 st.success(
                     "💜 Your staff response has been submitted successfully!"
                 )
-
-                st.balloons()
-
-            else:
-
-                st.error(
-                    "❌ Unable to submit the response."
-                )
-
-                st.code(message)
-
-
-# ============================================================
-# SIDEBAR
-# ============================================================
-
-with st.sidebar:
-
-    st.markdown("## 💜 Campus Sphere")
-
-    st.divider()
-
-    if st.button(
-        "🏠 Welcome",
-        use_container_width=True
-    ):
-
-        go_to("welcome")
-        st.rerun()
-
-    st.divider()
-
-    st.caption(
-        "Responses are submitted to the connected Google Sheet."
-    )
