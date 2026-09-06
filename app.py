@@ -16,7 +16,7 @@ st.set_page_config(
 
 
 # ============================================================
-# GOOGLE APPS SCRIPT WEB APP URL
+# GOOGLE APPS SCRIPT URL
 # ============================================================
 
 GOOGLE_SCRIPT_URL = (
@@ -27,10 +27,62 @@ GOOGLE_SCRIPT_URL = (
 
 
 # ============================================================
-# SETTINGS
+# DESIGN
 # ============================================================
 
 PURPLE = "#4B248F"
+
+st.markdown(
+    f"""
+    <style>
+
+    .main-title {{
+        color: {PURPLE};
+        text-align: center;
+        font-size: 46px;
+        font-weight: bold;
+        margin-top: 30px;
+    }}
+
+    .subtitle {{
+        color: #777777;
+        text-align: center;
+        font-size: 19px;
+        margin-bottom: 30px;
+    }}
+
+    .section-title {{
+        color: {PURPLE};
+        font-size: 30px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }}
+
+    .question-title {{
+        color: {PURPLE};
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }}
+
+    .welcome-text {{
+        color: #555555;
+        text-align: center;
+        font-size: 18px;
+        line-height: 1.7;
+    }}
+
+    div.stButton > button {{
+        border-radius: 10px;
+        font-weight: bold;
+        min-height: 45px;
+    }}
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 
 # ============================================================
@@ -164,61 +216,13 @@ ADD_OPTIONS = [
 
 
 # ============================================================
-# DESIGN
-# ============================================================
-
-st.markdown(
-    f"""
-    <style>
-
-    .main-title {{
-        color: {PURPLE};
-        text-align: center;
-        font-size: 46px;
-        font-weight: bold;
-        margin-top: 30px;
-    }}
-
-    .subtitle {{
-        color: #777777;
-        text-align: center;
-        font-size: 19px;
-        margin-bottom: 30px;
-    }}
-
-    .section-title {{
-        color: {PURPLE};
-        font-size: 30px;
-        font-weight: bold;
-        margin-bottom: 20px;
-    }}
-
-    .welcome-text {{
-        color: #555555;
-        text-align: center;
-        font-size: 18px;
-        line-height: 1.7;
-    }}
-
-    div.stButton > button {{
-        border-radius: 10px;
-        font-weight: bold;
-        min-height: 45px;
-    }}
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# ============================================================
 # SESSION STATE
 # ============================================================
 
 if "page" not in st.session_state:
     st.session_state.page = "welcome"
 
+# Student details
 if "student_name" not in st.session_state:
     st.session_state.student_name = ""
 
@@ -234,9 +238,11 @@ if "student_department" not in st.session_state:
 if "student_year" not in st.session_state:
     st.session_state.student_year = "Select Year"
 
-if "student_suggestions" not in st.session_state:
-    st.session_state.student_suggestions = ""
+# Student question 10
+if "student_other_information" not in st.session_state:
+    st.session_state.student_other_information = ""
 
+# Staff details
 if "staff_name" not in st.session_state:
     st.session_state.staff_name = ""
 
@@ -249,6 +255,7 @@ if "staff_department" not in st.session_state:
 if "staff_designation" not in st.session_state:
     st.session_state.staff_designation = "Select Designation"
 
+# Staff question 7
 if "staff_suggestions" not in st.session_state:
     st.session_state.staff_suggestions = ""
 
@@ -327,9 +334,7 @@ if st.session_state.page == "welcome":
     )
 
     st.markdown(
-        '<div class="subtitle">'
-        'Welcome to Campus Sphere'
-        '</div>',
+        '<div class="subtitle">Welcome to Campus Sphere</div>',
         unsafe_allow_html=True
     )
 
@@ -375,9 +380,7 @@ if st.session_state.page == "welcome":
 elif st.session_state.page == "user_type":
 
     st.markdown(
-        '<div class="section-title">'
-        'Choose Your Category'
-        '</div>',
+        '<div class="section-title">Choose Your Category</div>',
         unsafe_allow_html=True
     )
 
@@ -396,7 +399,7 @@ elif st.session_state.page == "user_type":
             use_container_width=True
         ):
 
-            go_to("student1")
+            go_to("student_details")
             st.rerun()
 
     with col2:
@@ -406,7 +409,7 @@ elif st.session_state.page == "user_type":
             use_container_width=True
         ):
 
-            go_to("staff1")
+            go_to("staff_details")
             st.rerun()
 
     st.write("")
@@ -421,15 +424,13 @@ elif st.session_state.page == "user_type":
 
 
 # ============================================================
-# STUDENT PAGE 1
+# STUDENT DETAILS
 # ============================================================
 
-elif st.session_state.page == "student1":
+elif st.session_state.page == "student_details":
 
     st.markdown(
-        '<div class="section-title">'
-        '👨‍🎓 Student Information'
-        '</div>',
+        '<div class="section-title">👨‍🎓 Student Details</div>',
         unsafe_allow_html=True
     )
 
@@ -491,7 +492,7 @@ elif st.session_state.page == "student1":
     with col2:
 
         if st.button(
-            "💜 Discover",
+            "💜 Continue",
             type="primary",
             use_container_width=True
         ):
@@ -500,71 +501,123 @@ elif st.session_state.page == "student1":
 
                 st.error("Please enter your name.")
 
-            elif st.session_state.student_department == "Select Department":
+            elif (
+                st.session_state.student_department
+                == "Select Department"
+            ):
 
                 st.error("Please select your department.")
 
-            elif st.session_state.student_year == "Select Year":
+            elif (
+                st.session_state.student_year
+                == "Select Year"
+            ):
 
                 st.error("Please select your year of study.")
 
             else:
 
-                go_to("student2")
+                go_to("student_questions1")
                 st.rerun()
 
 
 # ============================================================
-# STUDENT PAGE 2
+# STUDENT QUESTIONS 1
 # ============================================================
 
-elif st.session_state.page == "student2":
+elif st.session_state.page == "student_questions1":
 
     st.markdown(
         '<div class="section-title">'
-        '📚 Academic Information'
+        '📚 Academic & Campus Information'
         '</div>',
         unsafe_allow_html=True
     )
 
-    st.subheader("Academic Information")
+    # QUESTION 1
 
-    cols = st.columns(2)
+    st.markdown(
+        '<div class="question-title">'
+        'Q1. Which academic information would you like to access through Campus Sphere?'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
-    for i, option in enumerate(ACADEMIC_OPTIONS):
+    for option in ACADEMIC_OPTIONS:
 
-        with cols[i % 2]:
+        st.checkbox(
+            option,
+            key=f"academic_{option}"
+        )
 
-            st.checkbox(
-                option,
-                key=f"academic_{option}"
-            )
 
-    st.subheader("Exam Information")
+    # QUESTION 2
 
-    cols = st.columns(2)
+    st.markdown(
+        '<div class="question-title">'
+        'Q2. Which examination-related information would you like to receive through Campus Sphere?'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
-    for i, option in enumerate(EXAM_OPTIONS):
+    for option in EXAM_OPTIONS:
 
-        with cols[i % 2]:
+        st.checkbox(
+            option,
+            key=f"exam_{option}"
+        )
 
-            st.checkbox(
-                option,
-                key=f"exam_{option}"
-            )
 
-    st.subheader("Timetable")
+    # QUESTION 3
 
-    cols = st.columns(2)
+    st.markdown(
+        '<div class="question-title">'
+        'Q3. Which timetable and regular academic updates would you like to access?'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
-    for i, option in enumerate(TIMETABLE_OPTIONS):
+    for option in TIMETABLE_OPTIONS:
 
-        with cols[i % 2]:
+        st.checkbox(
+            option,
+            key=f"timetable_{option}"
+        )
 
-            st.checkbox(
-                option,
-                key=f"timetable_{option}"
-            )
+
+    # QUESTION 4
+
+    st.markdown(
+        '<div class="question-title">'
+        'Q4. Which notices and announcements would you like to receive?'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    for option in NOTICE_OPTIONS:
+
+        st.checkbox(
+            option,
+            key=f"notice_{option}"
+        )
+
+
+    # QUESTION 5
+
+    st.markdown(
+        '<div class="question-title">'
+        'Q5. Which events and activities would you like to know about?'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    for option in EVENT_OPTIONS:
+
+        st.checkbox(
+            option,
+            key=f"event_{option}"
+        )
+
 
     st.write("")
 
@@ -577,161 +630,118 @@ elif st.session_state.page == "student2":
             use_container_width=True
         ):
 
-            go_to("student1")
+            go_to("student_details")
             st.rerun()
 
     with col2:
 
         if st.button(
-            "💜 Discover",
+            "💜 Continue",
             type="primary",
             use_container_width=True
         ):
 
-            go_to("student3")
+            go_to("student_questions2")
             st.rerun()
 
 
 # ============================================================
-# STUDENT PAGE 3
+# STUDENT QUESTIONS 2
 # ============================================================
 
-elif st.session_state.page == "student3":
+elif st.session_state.page == "student_questions2":
 
     st.markdown(
         '<div class="section-title">'
-        '📢 College Activities & Updates'
+        '🏆 Opportunities, Learning & Skills'
         '</div>',
         unsafe_allow_html=True
     )
 
-    st.subheader("Notices")
-
-    cols = st.columns(2)
-
-    for i, option in enumerate(NOTICE_OPTIONS):
-
-        with cols[i % 2]:
-
-            st.checkbox(
-                option,
-                key=f"notice_{option}"
-            )
-
-    st.subheader("Events")
-
-    cols = st.columns(2)
-
-    for i, option in enumerate(EVENT_OPTIONS):
-
-        with cols[i % 2]:
-
-            st.checkbox(
-                option,
-                key=f"event_{option}"
-            )
-
-    st.subheader("Competitions")
-
-    cols = st.columns(2)
-
-    for i, option in enumerate(COMPETITION_OPTIONS):
-
-        with cols[i % 2]:
-
-            st.checkbox(
-                option,
-                key=f"competition_{option}"
-            )
-
-    st.subheader("Results & Achievements")
-
-    cols = st.columns(2)
-
-    for i, option in enumerate(RESULT_OPTIONS):
-
-        with cols[i % 2]:
-
-            st.checkbox(
-                option,
-                key=f"result_{option}"
-            )
-
-    st.write("")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        if st.button(
-            "💜 Rewind",
-            use_container_width=True
-        ):
-
-            go_to("student2")
-            st.rerun()
-
-    with col2:
-
-        if st.button(
-            "💜 Discover",
-            type="primary",
-            use_container_width=True
-        ):
-
-            go_to("student4")
-            st.rerun()
-
-
-# ============================================================
-# STUDENT PAGE 4
-# ============================================================
-
-elif st.session_state.page == "student4":
+    # QUESTION 6
 
     st.markdown(
-        '<div class="section-title">'
-        '🎯 Learning, Skills & Suggestions'
+        '<div class="question-title">'
+        'Q6. Which competitions would you like to receive information about?'
         '</div>',
         unsafe_allow_html=True
     )
 
-    st.subheader(
-        "Seminars / Workshops / Learning"
+    for option in COMPETITION_OPTIONS:
+
+        st.checkbox(
+            option,
+            key=f"competition_{option}"
+        )
+
+
+    # QUESTION 7
+
+    st.markdown(
+        '<div class="question-title">'
+        'Q7. What event and competition results would you like to know?'
+        '</div>',
+        unsafe_allow_html=True
     )
 
-    cols = st.columns(2)
+    for option in RESULT_OPTIONS:
 
-    for i, option in enumerate(LEARNING_OPTIONS):
+        st.checkbox(
+            option,
+            key=f"result_{option}"
+        )
 
-        with cols[i % 2]:
 
-            st.checkbox(
-                option,
-                key=f"learning_{option}"
-            )
+    # QUESTION 8
 
-    st.subheader("Skills / Courses")
+    st.markdown(
+        '<div class="question-title">'
+        'Q8. Which seminars, workshops and learning programs interest you?'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
-    cols = st.columns(2)
+    for option in LEARNING_OPTIONS:
 
-    for i, option in enumerate(SKILL_OPTIONS):
+        st.checkbox(
+            option,
+            key=f"learning_{option}"
+        )
 
-        with cols[i % 2]:
 
-            st.checkbox(
-                option,
-                key=f"skill_{option}"
-            )
+    # QUESTION 9
 
-    st.subheader("Suggestions")
+    st.markdown(
+        '<div class="question-title">'
+        'Q9. Which skills or courses are you interested in learning or improving?'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    for option in SKILL_OPTIONS:
+
+        st.checkbox(
+            option,
+            key=f"skill_{option}"
+        )
+
+
+    # QUESTION 10
+
+    st.markdown(
+        '<div class="question-title">'
+        'Q10. What other information, skills, courses or campus activities would you like to see in Campus Sphere?'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
     st.text_area(
-        "Your suggestions / additional feedback",
-        key="student_suggestions",
+        "Your answer",
+        key="student_other_information",
         height=150
     )
 
+
     st.write("")
 
     col1, col2 = st.columns(2)
@@ -743,7 +753,7 @@ elif st.session_state.page == "student4":
             use_container_width=True
         ):
 
-            go_to("student3")
+            go_to("student_questions1")
             st.rerun()
 
     with col2:
@@ -764,6 +774,8 @@ elif st.session_state.page == "student4":
                 "User Type":
                     "Student",
 
+                # STUDENT DETAILS
+
                 "Name":
                     st.session_state.student_name,
 
@@ -776,65 +788,67 @@ elif st.session_state.page == "student4":
                 "Department":
                     st.session_state.student_department,
 
-                "Year":
+                "Year of Study":
                     st.session_state.student_year,
 
-                "Academic Information":
+                # QUESTIONS
+
+                "Q1 - Academic Information":
                     get_checked(
                         "academic",
                         ACADEMIC_OPTIONS
                     ),
 
-                "Exam Information":
+                "Q2 - Examination Information":
                     get_checked(
                         "exam",
                         EXAM_OPTIONS
                     ),
 
-                "Timetable":
+                "Q3 - Timetable & Academic Updates":
                     get_checked(
                         "timetable",
                         TIMETABLE_OPTIONS
                     ),
 
-                "Notices":
+                "Q4 - Notices & Announcements":
                     get_checked(
                         "notice",
                         NOTICE_OPTIONS
                     ),
 
-                "Events":
+                "Q5 - Events & Activities":
                     get_checked(
                         "event",
                         EVENT_OPTIONS
                     ),
 
-                "Competitions":
+                "Q6 - Competitions":
                     get_checked(
                         "competition",
                         COMPETITION_OPTIONS
                     ),
 
-                "Results":
+                "Q7 - Results & Achievements":
                     get_checked(
                         "result",
                         RESULT_OPTIONS
                     ),
 
-                "Seminars / Workshops / Learning":
+                "Q8 - Seminars / Workshops / Learning":
                     get_checked(
                         "learning",
                         LEARNING_OPTIONS
                     ),
 
-                "Skills / Courses":
+                "Q9 - Skills / Courses":
                     get_checked(
                         "skill",
                         SKILL_OPTIONS
                     ),
 
-                "Suggestions":
-                    st.session_state.student_suggestions
+                "Q10 - Other Information":
+                    st.session_state.student_other_information
             }
 
             success, message = send_to_google_sheet(response)
@@ -855,15 +869,13 @@ elif st.session_state.page == "student4":
 
 
 # ============================================================
-# STAFF PAGE 1
+# STAFF DETAILS
 # ============================================================
 
-elif st.session_state.page == "staff1":
+elif st.session_state.page == "staff_details":
 
     st.markdown(
-        '<div class="section-title">'
-        '👩‍🏫 Staff Information'
-        '</div>',
+        '<div class="section-title">👩‍🏫 Staff Details</div>',
         unsafe_allow_html=True
     )
 
@@ -913,7 +925,7 @@ elif st.session_state.page == "staff1":
     with col2:
 
         if st.button(
-            "💜 Discover",
+            "💜 Continue",
             type="primary",
             use_container_width=True
         ):
@@ -930,158 +942,151 @@ elif st.session_state.page == "staff1":
 
                 st.error("Please enter department.")
 
-            elif st.session_state.staff_designation == "Select Designation":
+            elif (
+                st.session_state.staff_designation
+                == "Select Designation"
+            ):
 
                 st.error("Please select designation.")
 
             else:
 
-                go_to("staff2")
+                go_to("staff_questions")
                 st.rerun()
 
 
 # ============================================================
-# STAFF PAGE 2
+# STAFF QUESTIONS
 # ============================================================
 
-elif st.session_state.page == "staff2":
+elif st.session_state.page == "staff_questions":
 
     st.markdown(
         '<div class="section-title">'
-        '🗂️ Staff Information & Updates'
+        '🗂️ Campus Management & Updates'
         '</div>',
         unsafe_allow_html=True
     )
 
-    st.subheader("Information Managed")
 
-    cols = st.columns(2)
-
-    for i, option in enumerate(MANAGE_OPTIONS):
-
-        with cols[i % 2]:
-
-            st.checkbox(
-                option,
-                key=f"manage_{option}"
-            )
-
-    st.subheader("Regular Updates")
-
-    cols = st.columns(2)
-
-    for i, option in enumerate(UPDATE_OPTIONS):
-
-        with cols[i % 2]:
-
-            st.checkbox(
-                option,
-                key=f"update_{option}"
-            )
-
-    st.subheader("Payment Information")
-
-    cols = st.columns(2)
-
-    for i, option in enumerate(PAYMENT_OPTIONS):
-
-        with cols[i % 2]:
-
-            st.checkbox(
-                option,
-                key=f"payment_{option}"
-            )
-
-    st.subheader("Payment Details")
-
-    cols = st.columns(2)
-
-    for i, option in enumerate(PAYMENT_DETAILS_OPTIONS):
-
-        with cols[i % 2]:
-
-            st.checkbox(
-                option,
-                key=f"payment_details_{option}"
-            )
-
-    st.subheader("Responsibility")
-
-    cols = st.columns(2)
-
-    for i, option in enumerate(RESPONSIBILITY_OPTIONS):
-
-        with cols[i % 2]:
-
-            st.checkbox(
-                option,
-                key=f"responsibility_{option}"
-            )
-
-    st.write("")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        if st.button(
-            "💜 Rewind",
-            use_container_width=True
-        ):
-
-            go_to("staff1")
-            st.rerun()
-
-    with col2:
-
-        if st.button(
-            "💜 Discover",
-            type="primary",
-            use_container_width=True
-        ):
-
-            go_to("staff3")
-            st.rerun()
-
-
-# ============================================================
-# STAFF PAGE 3
-# ============================================================
-
-elif st.session_state.page == "staff3":
+    # QUESTION 1
 
     st.markdown(
-        '<div class="section-title">'
-        '📝 Additional Staff Information'
+        '<div class="question-title">'
+        'Q1. Which campus information would you like to update or manage?'
         '</div>',
         unsafe_allow_html=True
     )
 
-    st.subheader(
-        "Information Added / Updated"
+    for option in MANAGE_OPTIONS:
+
+        st.checkbox(
+            option,
+            key=f"manage_{option}"
+        )
+
+
+    # QUESTION 2
+
+    st.markdown(
+        '<div class="question-title">'
+        'Q2. Which updates should be regularly communicated to students?'
+        '</div>',
+        unsafe_allow_html=True
     )
 
-    cols = st.columns(2)
+    for option in UPDATE_OPTIONS:
 
-    for i, option in enumerate(ADD_OPTIONS):
+        st.checkbox(
+            option,
+            key=f"update_{option}"
+        )
 
-        with cols[i % 2]:
 
-            st.checkbox(
-                option,
-                key=f"add_{option}"
-            )
+    # QUESTION 3
 
-    st.subheader(
-        "Additional Features / Improvements"
+    st.markdown(
+        '<div class="question-title">'
+        'Q3. Which college-related payment information should be maintained?'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    for option in PAYMENT_OPTIONS:
+
+        st.checkbox(
+            option,
+            key=f"payment_{option}"
+        )
+
+
+    # QUESTION 4
+
+    st.markdown(
+        '<div class="question-title">'
+        'Q4. Which payment details should be maintained?'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    for option in PAYMENT_DETAILS_OPTIONS:
+
+        st.checkbox(
+            option,
+            key=f"payment_details_{option}"
+        )
+
+
+    # QUESTION 5
+
+    st.markdown(
+        '<div class="question-title">'
+        'Q5. Who is responsible for the payment or activity?'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    for option in RESPONSIBILITY_OPTIONS:
+
+        st.checkbox(
+            option,
+            key=f"responsibility_{option}"
+        )
+
+
+    # QUESTION 6
+
+    st.markdown(
+        '<div class="question-title">'
+        'Q6. What information should staff be able to add or update?'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    for option in ADD_OPTIONS:
+
+        st.checkbox(
+            option,
+            key=f"add_{option}"
+        )
+
+
+    # QUESTION 7
+
+    st.markdown(
+        '<div class="question-title">'
+        'Q7. What additional features or improvements would you suggest for Campus Sphere?'
+        '</div>',
+        unsafe_allow_html=True
     )
 
     st.text_area(
-        "Suggestions / additional information",
+        "Your suggestions",
         key="staff_suggestions",
         height=150
     )
 
+
     st.write("")
 
     col1, col2 = st.columns(2)
@@ -1093,7 +1098,7 @@ elif st.session_state.page == "staff3":
             use_container_width=True
         ):
 
-            go_to("staff2")
+            go_to("staff_details")
             st.rerun()
 
     with col2:
@@ -1114,7 +1119,9 @@ elif st.session_state.page == "staff3":
                 "User Type":
                     "Staff",
 
-                "Name":
+                # STAFF DETAILS
+
+                "Staff Name":
                     st.session_state.staff_name,
 
                 "Staff ID":
@@ -1126,43 +1133,45 @@ elif st.session_state.page == "staff3":
                 "Designation":
                     st.session_state.staff_designation,
 
-                "Information Managed":
+                # QUESTIONS
+
+                "Q1 - Campus Information Managed":
                     get_checked(
                         "manage",
                         MANAGE_OPTIONS
                     ),
 
-                "Regular Updates":
+                "Q2 - Regular Updates":
                     get_checked(
                         "update",
                         UPDATE_OPTIONS
                     ),
 
-                "Payment Information":
+                "Q3 - Payment Information":
                     get_checked(
                         "payment",
                         PAYMENT_OPTIONS
                     ),
 
-                "Payment Details":
+                "Q4 - Payment Details":
                     get_checked(
                         "payment_details",
                         PAYMENT_DETAILS_OPTIONS
                     ),
 
-                "Responsibility":
+                "Q5 - Responsibility":
                     get_checked(
                         "responsibility",
                         RESPONSIBILITY_OPTIONS
                     ),
 
-                "Information Added / Updated":
+                "Q6 - Information Added / Updated":
                     get_checked(
                         "add",
                         ADD_OPTIONS
                     ),
 
-                "Suggestions":
+                "Q7 - Additional Features / Improvements":
                     st.session_state.staff_suggestions
             }
 
@@ -1189,9 +1198,7 @@ elif st.session_state.page == "staff3":
 
 with st.sidebar:
 
-    st.markdown(
-        "## 💜 Campus Sphere"
-    )
+    st.markdown("## 💜 Campus Sphere")
 
     st.divider()
 
@@ -1206,5 +1213,5 @@ with st.sidebar:
     st.divider()
 
     st.caption(
-        "Responses are securely submitted to the connected Google Sheet."
+        "Responses are submitted securely to the connected Google Sheet."
     )
