@@ -889,4 +889,4 @@ with st.sidebar:
 
     st.caption(
         "Responses are submitted to the connected Google Sheet."
-    )V
+    )
