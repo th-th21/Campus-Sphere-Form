@@ -19,7 +19,7 @@ st.set_page_config(
 # GOOGLE APPS SCRIPT URL
 # ============================================================
 
-GOOGLE_SCRIPT_URL = ("https://script.google.com/macros/s/AKfycbyVCqbH-YzW7OE03d-s0RnVnAzf3ZwVxRrBqwjmNZRC8tK0xxpSL7fMYrbe-PJKPee9/exec")
+GOOGLE_SCRIPT_URL = ("https://script.google.com/macros/s/AKfycbxjls2H6bZtwwdHMfU1eiuwpEWMJvxwoN5ouWrAKKQITOuf26tH6UbICI0cyKSpFR9jkw/exec")
 PURPLE = "#4B248F"
 
 
