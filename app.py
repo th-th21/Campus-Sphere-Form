@@ -118,9 +118,96 @@ st.markdown(
         color: #321567 !important;
     }}
 
-    /* Button text */
-    .stButton button {{
+    /* --------------------------------------------------------
+       FORCE LIGHT THEME FOR THE CAMPUS SPHERE FORM
+       -------------------------------------------------------- */
+    :root,
+    html, body,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stHeader"],
+    [data-testid="stToolbar"] {{
+        color-scheme: light !important;
+    }}
+
+    /* --------------------------------------------------------
+       BUTTONS: FORCE PURPLE BACKGROUND + WHITE TEXT
+       Works even when the browser/device is in dark mode.
+       -------------------------------------------------------- */
+    .stButton > button,
+    .stButton > button[kind],
+    .stButton > button[data-testid],
+    button[kind="secondary"],
+    button[kind="primary"],
+    [data-testid="stBaseButton-secondary"],
+    [data-testid="stBaseButton-primary"],
+    [data-testid^="stBaseButton-"] {{
+        background: #4B248F !important;
+        background-color: #4B248F !important;
         color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+        text-shadow: none !important;
+        border: 1px solid #4B248F !important;
+        border-radius: 7px !important;
+        min-height: 2.7rem !important;
+        box-shadow: none !important;
+        opacity: 1 !important;
+        filter: none !important;
+        color-scheme: light !important;
+    }}
+
+    .stButton > button span,
+    .stButton > button p,
+    .stButton > button div,
+    .stButton > button svg,
+    button[kind="secondary"] span,
+    button[kind="secondary"] p,
+    button[kind="secondary"] div,
+    button[kind="secondary"] svg,
+    button[kind="primary"] span,
+    button[kind="primary"] p,
+    button[kind="primary"] div,
+    button[kind="primary"] svg,
+    [data-testid^="stBaseButton-"] span,
+    [data-testid^="stBaseButton-"] p,
+    [data-testid^="stBaseButton-"] div,
+    [data-testid^="stBaseButton-"] svg {{
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+        fill: #FFFFFF !important;
+        opacity: 1 !important;
+    }}
+
+    .stButton > button:hover,
+    .stButton > button:focus,
+    .stButton > button:active,
+    button[kind="secondary"]:hover,
+    button[kind="primary"]:hover,
+    [data-testid^="stBaseButton-"]:hover {{
+        background: #321567 !important;
+        background-color: #321567 !important;
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+        border-color: #321567 !important;
+    }}
+
+    /* Keep fields readable even if the device uses dark mode */
+    input, textarea, select, [role="combobox"] {{
+        color: #222222 !important;
+        -webkit-text-fill-color: #222222 !important;
+        background-color: #FFFFFF !important;
+        color-scheme: light !important;
+    }}
+
+    /* Dropdown menus */
+    [data-baseweb="popover"],
+    [role="listbox"],
+    [role="option"] {{
+        background-color: #FFFFFF !important;
+        color: #222222 !important;
+    }}
+
+    [role="option"] * {{
+        color: #222222 !important;
     }}
 
     /* Progress text */
