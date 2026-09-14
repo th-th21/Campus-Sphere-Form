@@ -1,6 +1,7 @@
 import streamlit as st
-from openpyxl import Workbook, load_workbook
-import os
+import json
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 
 # ============================================================
 # CAMPUS SPHERE - STREAMLIT VERSION
@@ -73,65 +74,50 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-FILE_NAME = "Campus_Sphere_Responses.xlsx"
+GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrj2Q1c13k6ap0KnumsCixUIQK3z7GBvGY_cVs98XL2qS5hBFNcMmUej-RHPN0ZwJr/exec"
 
 # ============================================================
-# EXCEL FUNCTIONS
+# GOOGLE SHEETS FUNCTIONS
 # ============================================================
 
-def save_to_excel(sheet_name, headers, data):
-
+def save_to_google_sheet(sheet_name, data):
     try:
+        payload = {
+            "sheet_name": sheet_name,
+            "row": data
+        }
 
-        if os.path.exists(FILE_NAME):
-
-            workbook = load_workbook(FILE_NAME)
-
-        else:
-
-            workbook = Workbook()
-            default_sheet = workbook.active
-            workbook.remove(default_sheet)
-
-        if sheet_name in workbook.sheetnames:
-            sheet = workbook[sheet_name]
-        else:
-            sheet = workbook.create_sheet(sheet_name)
-            sheet.append(headers)
-
-        sheet.append(data)
-
-        for column in sheet.columns:
-
-            max_length = 0
-            column_letter = column[0].column_letter
-
-            for cell in column:
-
-                if cell.value is not None:
-                    max_length = max(
-                        max_length,
-                        len(str(cell.value))
-                    )
-
-            sheet.column_dimensions[column_letter].width = min(
-                max(max_length + 2, 12),
-                35
-            )
-
-        workbook.save(FILE_NAME)
-
-        return True, ""
-
-    except PermissionError:
-
-        return False, (
-            "Please close the Campus_Sphere_Responses.xlsx "
-            "file and try submitting again."
+        request = Request(
+            GOOGLE_APPS_SCRIPT_URL,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST"
         )
 
-    except Exception as error:
+        with urlopen(request, timeout=20) as response:
+            response_text = response.read().decode("utf-8")
 
+        result = json.loads(response_text)
+
+        if result.get("success"):
+            return True, ""
+
+        return False, result.get("message", "Google Sheets could not save the response.")
+
+    except HTTPError as error:
+        try:
+            details = error.read().decode("utf-8")
+        except Exception:
+            details = str(error)
+        return False, f"Google Sheets error: {details}"
+
+    except URLError as error:
+        return False, f"Could not connect to Google Sheets: {error.reason}"
+
+    except json.JSONDecodeError:
+        return False, "Google Sheets returned an invalid response."
+
+    except Exception as error:
         return False, str(error)
 
 
@@ -570,9 +556,8 @@ elif st.session_state.page == 4:
                 suggestion
             ]
 
-            success, error = save_to_excel(
+            success, error = save_to_google_sheet(
                 "Student Details and Data",
-                headers,
                 data
             )
 
@@ -583,9 +568,8 @@ elif st.session_state.page == 4:
                 )
 
                 st.info(
-                    "Student details are stored in the "
-                    "'Student Details and Data' sheet of "
-                    "Campus_Sphere_Responses.xlsx."
+                    "Student details have been added to the "
+                    "'Student Details and Data' Google Sheet."
                 )
 
             else:
@@ -854,9 +838,8 @@ elif st.session_state.page == 7:
                 staff_suggestion
             ]
 
-            success, error = save_to_excel(
+            success, error = save_to_google_sheet(
                 "Staff Details and Data",
-                headers,
                 data
             )
 
@@ -867,9 +850,8 @@ elif st.session_state.page == 7:
                 )
 
                 st.info(
-                    "Staff details are stored in the "
-                    "'Staff Details and Data' sheet of "
-                    "Campus_Sphere_Responses.xlsx."
+                    "Staff details have been added to the "
+                    "'Staff Details and Data' Google Sheet."
                 )
 
             else:
