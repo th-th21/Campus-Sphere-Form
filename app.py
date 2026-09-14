@@ -62,12 +62,70 @@ st.markdown(
 
     .user-type {{
         background-color: {LIGHT_PURPLE};
-        color: {PURPLE};
+        color: {PURPLE} !important;
         padding: 8px 12px;
         border-radius: 5px;
         font-weight: 700;
         display: inline-block;
         margin: 8px 0 15px 0;
+    }}
+
+    /* --------------------------------------------------------
+       FORCE CAMPUS SPHERE TEXT TO STAY VISIBLE IN DARK MODE
+       -------------------------------------------------------- */
+    [data-testid="stAppViewContainer"],
+    [data-testid="stHeader"],
+    .stApp {{
+        background-color: #FAF7FF !important;
+    }}
+
+    [data-testid="stWidgetLabel"] p,
+    [data-testid="stWidgetLabel"] label,
+    [data-testid="stWidgetLabel"] span,
+    .stSelectbox label,
+    .stMultiSelect label,
+    .stTextInput label,
+    .stTextArea label,
+    .stSelectSlider label,
+    .stCaption,
+    .stCaption p {{
+        color: #321567 !important;
+        opacity: 1 !important;
+        font-weight: 700 !important;
+    }}
+
+    /* Dropdown / multiselect text */
+    [data-baseweb="select"] * {{
+        color: #222222 !important;
+    }}
+
+    [data-baseweb="select"] > div {{
+        background-color: #FFFFFF !important;
+        border-color: #D8C9EE !important;
+    }}
+
+    [data-baseweb="input"] input,
+    [data-baseweb="textarea"] textarea,
+    .stTextInput input,
+    .stTextArea textarea {{
+        color: #222222 !important;
+        background-color: #FFFFFF !important;
+    }}
+
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] li,
+    [data-testid="stMarkdownContainer"] span {{
+        color: #321567 !important;
+    }}
+
+    /* Button text */
+    .stButton button {{
+        color: #FFFFFF !important;
+    }}
+
+    /* Progress text */
+    [data-testid="stProgress"] + div {{
+        color: #321567 !important;
     }}
     </style>
     """,
